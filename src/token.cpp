@@ -9,17 +9,13 @@
 #include <iostream>
 
 
-token::token(token_type type_, std::string_view lexeme_, std::string_view literal_, int line_): 
-    type(type_), 
-    lexeme(lexeme_), 
-    line(line_){
-    if(type == token_type::NUMBER){
-        literal_num = std::stod(std::string(literal_));
-    } else {
-        literal_str = std::string(literal_);
-    }
-}
+token::token(token_type type_, std::string_view lexeme_, std::string_view literal_, int line_)
+    : type(type_), lexeme(lexeme_), literal(literal_), line(line_){}
 
+
+std::string token::to_string(){
+    return std::format("{0} {1} {2}", token_names[type], lexeme, literal);
+}
 
 token_type token::get_type(){
     return type;
@@ -32,16 +28,7 @@ int token::get_line(){
 
 
 std::string token::get_literal(){
-    switch(type){
-        case token_type::NUMBER:
-            return std::to_string(literal_num);
-        case token_type::FUN:
-            [[fallthrough]];
-        case token_type::STRING:
-            return literal_str;
-        default:
-            return token_names[type];
-    }
+    return literal;
 }
 
 
@@ -71,9 +58,9 @@ token token::operator+(token b){
         return token(token_type::NIL, "", "", this->line);
     }
     if(this->type == token_type::NUMBER){
-        return token(token_type::NUMBER, "", std::to_string(this->literal_num + b.literal_num), this->line);
+        return token(token_type::NUMBER, "", std::to_string(std::stod(this->literal) + std::stod(b.literal)), this->line);
     } else if(this->type == token_type::STRING){
-        return token(token_type::STRING, "", this->literal_str + b.literal_str, this->line);
+        return token(token_type::STRING, "", this->literal + b.literal, this->line);
     }
     lox::error(this->line, "Cannot add types");
     return token(token_type::NIL, "", "", this->line);
@@ -85,7 +72,7 @@ token token::operator-(token b){
         lox::error(this->line, "Cannot subtract non-number types");
         return token(token_type::NIL, "", "", this->line);
     }
-    return token(token_type::NUMBER, "", std::to_string(this->literal_num - b.literal_num), this->line);
+    return token(token_type::NUMBER, "", std::to_string(std::stod(this->literal) - std::stod(b.literal)), this->line);
 }
 
 
@@ -94,7 +81,7 @@ token token::operator*(token b){
         lox::error(this->line, "Cannot multiply non-number types");
         return token(token_type::NIL, "", "", this->line);
     }
-    return token(token_type::NUMBER, "", std::to_string(this->literal_num * b.literal_num), this->line);
+    return token(token_type::NUMBER, "", std::to_string(std::stod(this->literal) * std::stod(b.literal)), this->line);
 }
 
 
@@ -103,11 +90,11 @@ token token::operator/(token b){
         lox::error(this->line, "Cannot divide non-number types");
         return token(token_type::NIL, "", "", this->line);
     }
-    if(b.literal_num == 0){
-        lox::error(b.line, "Cannot divide by zero");
-        return token(token_type::NIL, "", "", b.line);
+    if(std::stod(b.literal) == 0){
+        lox::error(this->line, "Cannot divide by zero");
+        return token(token_type::NIL, "", "", this->line);
     }
-    return token(token_type::NUMBER, "", std::to_string(this->literal_num / b.literal_num), this->line);
+    return token(token_type::NUMBER, "", std::to_string(std::stod(this->literal) / std::stod(b.literal)), this->line);
 }
 
 
@@ -120,10 +107,10 @@ token token::operator==(token b){
         return token(token_type::NIL, "", "", this->line);
     }
     if(type == token_type::STRING){
-        return token((literal_str == b.literal_str) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+        return token((literal == b.literal) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
     } 
     if(type == token_type::NUMBER){
-        return token((literal_num == b.literal_num) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+        return token((std::stod(literal) == std::stod(b.literal)) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
     }
     lox::error(this->line, "Cannot compare types");
     return token(token_type::NIL, "", "", this->line);
@@ -141,9 +128,9 @@ token token::operator<(token b){
         return token(token_type::NIL, "", "", this->line);
     }
     if(type == token_type::STRING){
-        return token((literal_str < b.literal_str) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+        return token((literal < b.literal) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
     }
-    return token((literal_num < b.literal_num) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+    return token((std::stod(literal) < std::stod(b.literal)) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
 }
 
 
@@ -158,9 +145,9 @@ token token::operator>(token b){
         return token(token_type::NIL, "", "", this->line);
     }
     if(type == token_type::STRING){
-        return token((literal_str > b.literal_str) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+        return token((literal > b.literal) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
     }
-    return token((literal_num > b.literal_num) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
+    return token((std::stod(literal) > std::stod(b.literal)) ? token_type::TRUE : token_type::FALSE, "", "", this->line);
 }
 
 
@@ -179,10 +166,10 @@ token::operator bool(){
         return false;
     }
     if(type == token_type::NUMBER){
-        return literal_num != 0;
+        return std::stod(literal) != 0;
     }
     if(type == token_type::STRING){
-        return not literal_str.empty();
+        return not literal.empty();
     }
     if(type == token_type::FALSE || type == token_type::NIL){
         return false;
@@ -197,7 +184,7 @@ std::ostream& operator<<(std::ostream& os, const token t){
             os << "nil";
             break;
         case token_type::NUMBER:
-            os << t.literal_num;
+            os << std::stod(t.literal);
             break;
         case token_type::TRUE:
             os << "true";
@@ -206,10 +193,10 @@ std::ostream& operator<<(std::ostream& os, const token t){
             os << "false";
             break;
         case token_type::FUN:
-            os << std::format("<fun {0}>", t.literal_str);
+            os << std::format("<fun {0}>", t.literal);
             break;
         default:
-            os << t.literal_str;
+            os << t.literal;
             break;
     }
     return os;

@@ -1,0 +1,32 @@
+cmake_minimum_required(VERSION 3.27)
+project(cplox)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
+if(MSVC)
+    add_compile_options(/MP)
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread")
+endif()
+
+#set the goal to windows 10 and later
+add_compile_options(-DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00)
+
+#set include directory
+include_directories(include)
+
+#set source directory
+file(GLOB SOURCES "src/*.cpp")
+
+#find all of the hieasyx files
+#set(EASYX_PATH "D:/code/module/hi_easyx")
+#file(GLOB_RECURSE EASYX_FILES "${EASYX_PATH}/*.cpp")
+
+# cancel the console startup logo
+
+
+#add executable with sources and main.c file
+add_executable(cplox ${SOURCES} main.cpp ${EASYX_FILES})

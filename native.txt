@@ -1,16 +1,7 @@
-原生函数
-===========
-print		// 输出
-input		// 输入
-clock		// 获取运行到现在的时长
-str		// 将一个变量转为字符串
-num		// 将一个变量尽可能转为数字
-exit		// 以指定数字为返回值，退出程序
-int		// 对小数取整
-sleep		// 睡眠
-
-
-原生类
-===========
-list		// 定长数组
-file		// 文件读写
+print
+input
+clock
+str
+num
+exit
+int
