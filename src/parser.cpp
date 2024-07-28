@@ -12,18 +12,6 @@
 
 
 /**
- * @brief 解析器错误类
-*/
-ParserError::ParserError(std::string_view message_):
-    message(message_)
-{}
-
-const char* ParserError::what() const noexcept{
-    return message.c_str();
-}
-
-
-/**
  * @brief 递归下降解析器的辅助函数
 */
 
@@ -205,6 +193,9 @@ expr parser::parse_call(){
     while(true){
         if(match_peer(token_type::LEFT_PAREN)){
             the_expr = finish_call(the_expr);
+        } else if (match_peer(token_type::DOT)){
+            token name = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
+            the_expr = new expr_get(the_expr, name);
         } else {
             break;
         }
@@ -225,8 +216,8 @@ expr parser::finish_call(expr callee){
         } while(match_peer(token_type::COMMA));
     }
 
-    token paren = consume(token_type::RIGHT_PAREN, "Expect ')' after arguments.");
-    return new expr_call(callee, nullptr, arguments);
+    consume(token_type::RIGHT_PAREN, "Expect ')' after arguments.");
+    return new expr_call(callee, arguments);
 }
 
 
@@ -247,7 +238,8 @@ expr parser::parse_primary(){
         return new expr_grouping(expr);
     }
     // 语法错误，抛出异常
-    throw syntax_error("Expect expression.");
+    lox::raise_syntax_error(get_peer().get_line(), "Expect expression.");
+    return nullptr;
 }
 
 
@@ -256,9 +248,9 @@ expr parser::parse_primary(){
 */
 stmt parser::parse_declaration(){
     try{
-        /*if(match_peer(token_type::CLASS)){
+        if(match_peer(token_type::CLASS)){
             return parse_class_decl();
-        }*/
+        }
         if(match_peer(token_type::FUN)){
             return parse_function();
         }
@@ -266,7 +258,7 @@ stmt parser::parse_declaration(){
             return parse_var_decl();
         }
         return parse_statement();
-    }catch(ParserError& e){
+    }catch(std::exception){
         synchronize();
         return nullptr;
     }
@@ -291,12 +283,34 @@ stmt parser::parse_class_decl(){
     token name = consume(token_type::IDENTIFIER, "Expect class name.");
     consume(token_type::LEFT_BRACE, "Expect '{' before class body.");
 
-    std::map<std::string, stmt> methods;
+    std::map<std::string, stmt_method*> methods;
     while(not is_at_end() and match_peer(token_type::FUN)){
-        methods[get_prev().get_lexeme()] = parse_function();
+        std::string method_name = get_peer().get_lexeme();
+        methods[method_name] = parse_method();
     }
     consume(token_type::RIGHT_BRACE, "Expect '}' after class body.");
     return new stmt_class(name.get_lexeme(), methods);
+}
+
+
+stmt_method* parser::parse_method(){
+    token name = consume(token_type::IDENTIFIER, "Expect method name.");
+    consume(token_type::LEFT_PAREN, "Expect '(' after method name.");
+
+    std::vector<token> parameters;
+    if(get_peer().get_type() != token_type::RIGHT_PAREN){
+        do{
+            if(parameters.size() >= 255){
+                lox::error(get_peer().get_line(), "Can't have more than 255 parameters.");
+            }
+            parameters.push_back(consume(token_type::IDENTIFIER, "Expect parameter name."));
+        } while(match_peer(token_type::COMMA));
+    }
+    consume(token_type::RIGHT_PAREN, "Expect ')' after parameters.");
+
+    consume(token_type::LEFT_BRACE, "Expect '{' before method body.");
+    stmt body = parse_block();
+    return new stmt_method(name.get_lexeme(), parameters, body);
 }
 
 
@@ -415,6 +429,7 @@ stmt parser::parse_block(){
 
 
 stmt parser::parse_function(){
+    // return parse_method();
     token name = consume(token_type::IDENTIFIER, "Expect function name.");
     consume(token_type::LEFT_PAREN, "Expect '(' after function name.");
     std::vector<token> parameters;
@@ -448,12 +463,6 @@ token parser::consume(token_type type, std::string_view message){
 }
 
 
-ParserError parser::error(token tok, std::string_view message){
-    lox::error(tok.get_line(), message);
-    return ParserError(message);
-}
-
-
 void parser::synchronize(){
     advance();
 
@@ -471,6 +480,8 @@ void parser::synchronize(){
             case token_type::WHILE:
             case token_type::RETURN:
                 return;
+            default:
+                break;
         }
 
         advance();

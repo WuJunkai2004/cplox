@@ -129,6 +129,11 @@ void env::pop(){
 }
 
 
+bool env::is_global_scope(){
+    return locale == global;
+}
+
+
 /**
  * @brief 操作环境中变量的函数
 */
@@ -167,21 +172,27 @@ token env::get_arg(std::string name){
 */
 
 
-bool env::func_exist(std::string name){
-    return locale->exists(name) && locale->get(name).get_type() == token_type::FUN;
+bool env::func_exist(std::string name, environment* current){
+    return current->exists(name) && current->get(name).get_type() == token_type::FUN;
 }
 
-void env::func_define(std::string name, std::vector<token> params, stmt body){
-    if(func_exist(name)){
+void env::func_define(std::string name, std::vector<token> params, stmt body, environment* current){
+    if(func_exist(name, current)){
         lox::error(-1, "Function '" + name + "' already declared in this scope.");
         return;
     }
-    locale->define      (name, var(token_type::FUN, name));
-    locale->define_func (name, params, body);
+    current->define      (name, var(token_type::FUN, name));
+    current->define_func (name, params, body);
 }
 
 func env::func_search(std::string name){
+    // 如果有dot
     environment* current = locale;
+    if(name.find(".") != std::string::npos){
+        std::string class_name = name.substr(0, name.find("."));
+        name = name.substr(name.find(".") + 1);
+        current = class_table[class_name];
+    }
     while(current != nullptr &&
          (not current->exists(name) || 
           current->get(name).get_type() != token_type::FUN)){
@@ -198,18 +209,32 @@ func env::func_search(std::string name){
 /**
  * @brief 操作环境中类的函数
 */
-void env::class_define(std::string name, std::map<std::string, stmt> methods){
-    if(locale->exists(name)){
-        lox::error(-1, "Class '" + name + "' already declared in this scope.");
+void env::class_define(std::string name, std::map<std::string, stmt_method*> methods){
+    if(not is_global_scope()){
+        lox::error(-1, "Classes can only be defined in global scope.");
         return;
     }
-    locale->define(name, var(token_type::CLASS, name));
-    stmt_function* constructor = nullptr;
-    if(methods.find("init") != methods.end()){
-        //constructor = new stmt_function(name, dynamic_cast<stmt_function>( (*methods["init"]) ));
+    if(class_table.find(name) != class_table.end()){
+        lox::error(-1, "Class '" + name + "' already declared.");
+        return;
     }
-    //locale->define_func(name, 
+    if(methods.find("init") == methods.end()){          // 如果没有初始化函数
+        lox::error(-1, "Class '" + name + "' must have an initializer.");
+        return;
+    }
+    class_table[name] = new environment();                       // 创建一个新的环境，储存当前类的实例的变量，形如 this.x
+    define(name, token(token_type::CLASS, name, "", 0), global); // 在全局环境中定义类名
+    func_define(name, 
+        methods["init"]->params, 
+        new stmt_init(name, methods["init"]),
+    global); // 在全局环境中定义初始化函数
     for(auto& method : methods){
-        method.second->accept();
+        if(method.first == "init"){
+            continue;
+        }
+        func_define(method.first, 
+            method.second->params, 
+            method.second->body,
+        class_table[name]); // 在全局环境中定义类的方法
     }
 }

@@ -58,22 +58,30 @@ public:
     environment* get_parent();
 };
 
+
+inline std::map<std::string, environment*> class_table;
+
+
 namespace env{
     inline environment* global;
     inline environment* locale;
     void init();
     void push();
     void pop();
+
+    bool is_global_scope();
+
     void define(std::string, token, environment* = locale);
     void assign(std::string, token, environment* = locale);
+
     token get(token, environment* = locale);
     token get_arg(std::string);
 
-    bool func_exist(std::string);
-    void func_define(std::string, std::vector<token>, stmt);
+    bool func_exist(std::string, environment* current = locale);
+    void func_define(std::string, std::vector<token>, stmt, environment* current = locale);
     func func_search(std::string);
 
-    void class_define(std::string, std::map<std::string, stmt>);
+    void class_define(std::string, std::map<std::string, stmt_method*>);
 }
 
 

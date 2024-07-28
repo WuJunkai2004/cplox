@@ -8,6 +8,7 @@
 namespace lox{
     inline bool had_global_error  = false;
     inline bool had_runtime_error = false;
+    inline bool had_syntax_error  = false;
 
     void run(std::string_view);
     void run_file(std::string_view);

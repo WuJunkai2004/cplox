@@ -110,10 +110,21 @@ public:
 class stmt_class : public stmt_base{
 private:
     std::string name;
-    std::map<std::string, stmt> methods;
+    std::map<std::string, stmt_method*> methods;
 public:
-    stmt_class(std::string, std::map<std::string, stmt>);
+    stmt_class(std::string, std::map<std::string, stmt_method*>);
     ~stmt_class();
+    void accept() override;
+};
+
+
+class stmt_init : public stmt_base{
+private:
+    std::string class_name;
+    stmt_method* constructor;
+public:
+    stmt_init(std::string, stmt_method*);
+    ~stmt_init();
     void accept() override;
 };
 

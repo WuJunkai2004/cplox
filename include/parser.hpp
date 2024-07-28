@@ -10,18 +10,7 @@
 #include "stmt.hpp"
 
 #include <vector>
-
-
-// Parser Error Class
-class ParserError : public std::exception{
-private:
-    std::string message;
-public:
-    ParserError(std::string_view);
-    const char* what() const noexcept override;
-};
-
-
+#include <string>
 
 
 class parser {
@@ -53,6 +42,7 @@ private:
     stmt parse_block();             // 匹配代码块
     stmt parse_function();          // 匹配函数声明
     stmt parse_class_decl();        // 匹配类声明
+    stmt_method* parse_method();    // 匹配类方法
 
     expr finish_call(expr callee);  // 完成函数调用
 
@@ -68,7 +58,6 @@ private:
     bool is_at_end();
 
     token consume(token_type, std::string_view);
-    ParserError error(token, std::string_view);
 
     void synchronize();
 public:

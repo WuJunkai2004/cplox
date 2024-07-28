@@ -153,7 +153,7 @@ void stmt_break::accept(){
 }
 
 
-stmt_class::stmt_class(std::string name_, std::map<std::string, stmt> methods_):
+stmt_class::stmt_class(std::string name_, std::map<std::string, stmt_method*> methods_):
     name(name_),
     methods(methods_)
 {}
@@ -166,4 +166,19 @@ stmt_class::~stmt_class(){
 
 void stmt_class::accept(){
     env::class_define(name, methods);
+}
+
+
+stmt_init::stmt_init(std::string name_, stmt_method* constructor_):
+    class_name(name_),
+    constructor(constructor_)
+{}
+
+stmt_init::~stmt_init(){
+    delete constructor;
+}
+
+void stmt_init::accept(){
+    code::execute( constructor);
+    ret_stack.set( token(token_type::CLASS, class_name, class_name, -1) );
 }

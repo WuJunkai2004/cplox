@@ -87,13 +87,22 @@ public:
 class expr_call : public expr_base{
 private:
     expr callee;
-    expr paren;
     std::vector<expr> arguments;
 public:
-    expr_call(expr, expr, std::vector<expr>);
+    expr_call(expr, std::vector<expr>);
     ~expr_call();
     token accept() override;
 };
 
+
+class expr_get : public expr_base{
+private:
+    expr object;
+    token name;
+public:
+    expr_get(expr, token);
+    ~expr_get();
+    token accept() override;
+};
 
 #endif // __EXPR_HPP__

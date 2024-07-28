@@ -1,22 +1,39 @@
 #include "error.hpp"
 #include <string>
+#include <format>
 #include <exception>
 
+#include "lox.hpp"
+
 // 语法错误
-syntax_error::syntax_error(std::string message_) :
+lox::syntax_error::syntax_error(std::string message_) :
     message(message_)
 {}
 
-const char* syntax_error::what() const noexcept{
+const char* lox::syntax_error::what() const noexcept{
     return message.c_str();
 }
 
 
 // 运行时错误
-runtime_error::runtime_error(std::string message_) :
+lox::runtime_error::runtime_error(std::string message_) :
     message(message_)
 {}
 
-const char* runtime_error::what() const noexcept{
+const char* lox::runtime_error::what() const noexcept{
     return message.c_str();
+}
+
+
+void lox::raise_syntax_error(int line, std::string message){
+    lox::had_syntax_error = true;
+    lox::error(line, message);
+    throw syntax_error(message);
+}
+
+
+void lox::raise_runtime_error(int line, std::string message){
+    lox::had_runtime_error = true;
+    lox::error(line, message);
+    throw runtime_error(message);
 }

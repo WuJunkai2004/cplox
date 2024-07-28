@@ -27,7 +27,8 @@ token return_stack::exit_scope(){
 
 void return_stack::set(){
     if(current < 0){
-        throw runtime_error("break statement outside of loop");
+        lox::raise_runtime_error(-1, "return statement outside of function");
+        return;
     }
     rets[current].value = token(token_type::NIL, "", "", -1);
     rets[current].is_set = true;
@@ -35,7 +36,8 @@ void return_stack::set(){
 
 void return_stack::set(token t){
     if(current < 0){
-        throw runtime_error("return statement outside of function");
+        lox::raise_runtime_error(-1, "return statement outside of function");
+        return;
     }
     rets[current].value = t;
     rets[current].is_set = true;

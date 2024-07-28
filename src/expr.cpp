@@ -141,15 +141,13 @@ token expr_assign::accept(){
 }
 
 
-expr_call::expr_call(expr callee_, expr paren_, std::vector<expr> arguments_):
+expr_call::expr_call(expr callee_, std::vector<expr> arguments_):
     callee(callee_),
-    paren(paren_),
     arguments(arguments_)
 {}
 
 expr_call::~expr_call(){
     delete callee;
-    delete paren;
     for(auto arg: arguments){
         delete arg;
     }
@@ -170,4 +168,28 @@ token expr_call::accept(){
         args.push_back(code::evaluate(arg));
     }
     return code::call(callee_func, args);
+}
+
+
+expr_get::expr_get(expr object_, token name_):
+    object(object_),
+    name(name_)
+{}
+
+expr_get::~expr_get(){
+    delete object;
+}
+
+token expr_get::accept(){
+    token obj = code::evaluate(object);
+    if(obj.get_type() != token_type::CLASS){
+        lox::raise_runtime_error(obj.get_line(), "Only instances have properties.");
+        return token(token_type::NIL, "", "", -1);
+    }
+    if(class_table.find(obj.get_literal()) == class_table.end()){
+        lox::raise_runtime_error(obj.get_line(), "Undefined class.");
+        return token(token_type::NIL, "", "", -1);
+    }
+    token method = env::get(name, class_table[obj.get_literal()]);
+    return token(method.get_type(), method.get_lexeme(), obj.get_literal() + "." + method.get_literal(), name.get_line());
 }
