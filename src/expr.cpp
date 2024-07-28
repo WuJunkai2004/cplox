@@ -23,41 +23,41 @@ expr_binary::~expr_binary(){
 
 token expr_binary::accept(){
     token l_var = code::evaluate(left);
-    token r_var = code::evaluate(right);
-    token result(token_type::NIL, "", "", -1);
     switch(operate.get_type()){
         case token_type::PLUS:
-            result = l_var + r_var;
-            break;
+            return l_var + code::evaluate(right);
         case token_type::MINUS:
-            result = l_var - r_var;
-            break;
+            return l_var - code::evaluate(right);
         case token_type::STAR:
-            result = l_var * r_var;
-            break;
+            return l_var * code::evaluate(right);
         case token_type::SLASH:
-            result = l_var / r_var;
-            break;
+            return l_var / code::evaluate(right);
         case token_type::GREATER:
-            result = l_var > r_var;
-            break;
+            return l_var > code::evaluate(right);
         case token_type::GREATER_EQUAL:
-            result = l_var >= r_var;
-            break;
+            return l_var >= code::evaluate(right);
         case token_type::LESS:
-            result = l_var < r_var;
-            break;
+            return l_var < code::evaluate(right);
         case token_type::LESS_EQUAL:
-            result = l_var <= r_var;
-            break;
+            return l_var <= code::evaluate(right);
         case token_type::BANG_EQUAL:
-            result = l_var != r_var;
-            break;
+            return l_var != code::evaluate(right);
         case token_type::EQUAL_EQUAL:
-            result = l_var == r_var;
-            break;
+            return l_var == code::evaluate(right);
+        case token_type::OR:
+            if(l_var){
+                return l_var;
+            }
+            return code::evaluate(right);
+        case token_type::AND:
+            if(!l_var){
+                return l_var;
+            }
+            return code::evaluate(right);
+        default:
+            lox::raise_runtime_error(operate.get_line(), "Unknown binary operator.");
     }
-    return result;
+    return token(token_type::NIL, "", "", -1);
 }
 
 expr_unary::expr_unary(expr right_, token operate_):
@@ -82,6 +82,8 @@ token expr_unary::accept(){
         case token_type::PLUS:
             result = r_var;
             break;
+        default:
+            lox::raise_runtime_error(operate.get_line(), "Unknown unary operator.");
     }
     return result;
 }
@@ -139,32 +141,6 @@ token expr_assign::accept(){
 }
 
 
-expr_logical::expr_logical(expr left_, expr right_, token operate_):
-    left(left_),
-    right(right_),
-    operate(operate_)
-{}
-
-expr_logical::~expr_logical(){
-    delete left;
-    delete right;
-}
-
-token expr_logical::accept(){
-    token l_var = code::evaluate(left);
-    if(operate.get_type() == token_type::OR){
-        if(l_var){
-            return l_var;
-        }
-    } else {
-        if(!l_var){
-            return l_var;
-        }
-    }
-    return code::evaluate(right);
-}
-
-
 expr_call::expr_call(expr callee_, expr paren_, std::vector<expr> arguments_):
     callee(callee_),
     paren(paren_),
@@ -182,7 +158,7 @@ expr_call::~expr_call(){
 token expr_call::accept(){
     token callee_var = code::evaluate(callee);
     if(callee_var.get_type() != token_type::FUN){
-        throw runtime_error("Can only call functions and classes.");
+        lox::raise_runtime_error(callee_var.get_line(), "Can only call functions or classes.");
     }
     func callee_func = env::func_search(callee_var.get_literal());
     if(arguments.size() != callee_func.get_arity()){

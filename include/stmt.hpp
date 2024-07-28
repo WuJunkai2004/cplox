@@ -79,16 +79,15 @@ using stmt_for   = stmt_loop;
 
 
 class stmt_function : public stmt_base{
-private:
+public:
     std::string name;
     std::vector<token> params;
     stmt body;
-public:
-    stmt_function(std::string, stmt_function&);
     stmt_function(std::string, std::vector<token>, stmt);
     ~stmt_function();
     void accept() override;
 };
+using stmt_method = stmt_function;
 
 
 class stmt_return : public stmt_base{

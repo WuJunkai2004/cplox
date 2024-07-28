@@ -118,12 +118,6 @@ void stmt_loop::accept(){
 }
 
 
-stmt_function::stmt_function(std::string name_, stmt_function& other):
-    name(name_),
-    params(other.params),
-    body(other.body)
-{}
-
 stmt_function::stmt_function(std::string name_, std::vector<token> params_, stmt body_):
     name(name_),
     params(params_),

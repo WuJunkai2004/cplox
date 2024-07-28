@@ -29,6 +29,7 @@ public:
     ~expr_binary();
     token accept() override;
 };
+using expr_logical = expr_binary;
 
 
 class expr_unary : public expr_base{
@@ -79,18 +80,6 @@ private:
 public:
     expr_assign(std::string, expr);
     ~expr_assign();
-    token accept() override;
-};
-
-
-class expr_logical : public expr_base{
-private:
-    expr left;
-    expr right;
-    token operate;
-public:
-    expr_logical(expr, expr, token);
-    ~expr_logical();
     token accept() override;
 };
 

@@ -6,12 +6,11 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <cmath>
 
 #include <iostream>
-
-extern std::map<std::string, token_type> keywords;
 
 scanner::scanner(std::string_view source_):
     source(source_), tokens() {
@@ -71,19 +70,43 @@ char scanner::get_next(){
 
 
 void scanner::scan_string(){
+    std::map<char, char> escape_chars = {
+        {'n', '\n'},
+        {'r', '\r'},
+        {'t', '\t'},
+        {'"', '"'},
+        {'\\', '\\'},
+        {'0', '\0'},
+        {'\n', '\n'}
+    };
+    std::string str;
     while(get_peer() != '"' && !is_at_end()){
         if(get_peer() == '\n'){
             line++;
         }
-        advance();
+        char get_ch = advance();
+        if(get_ch == '\\'){
+            if(is_at_end()){
+                lox::error(line, "Unterminated string.");
+                return;
+            }
+            char escape_ch = advance();
+            if(escape_chars.find(escape_ch) != escape_chars.end()){
+                str.push_back(escape_chars[escape_ch]);
+            } else {
+                lox::error(line, "Invalid escape character.");
+                return;
+            }
+        } else [[likely]] {
+            str.push_back(get_ch);
+        }
     }
     if(is_at_end()){
         lox::error(line, "Unterminated string.");
         return;
     }
     advance();
-    std::string_view value = source.substr(start + 1, current - start - 2);
-    add_token(token_type::STRING, value);
+    add_token(token_type::STRING, str);
 }
 
 
