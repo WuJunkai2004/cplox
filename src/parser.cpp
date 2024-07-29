@@ -99,6 +99,18 @@ expr parser::parse_assignment(){
 }
 
 
+expr parser::parse_dot(){
+    expr the_expr = parse_term();
+
+    while(match_peer(token_type::DOT)){
+        token name = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
+        the_expr = new expr_get(the_expr, name);
+    }
+
+    return the_expr;
+}
+
+
 expr parser::parse_logical_or(){
     expr the_expr = parse_logical_and();
 
@@ -229,6 +241,12 @@ expr parser::parse_primary(){
     }
 
     if(match_peer(token_type::IDENTIFIER)){
+        if(get_peer().get_type() == token_type::DOT){
+            token name = get_prev();
+            advance();
+            token attr = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
+            return new expr_get(new expr_variable(name), attr);
+        }
         return new expr_variable(get_prev());
     }
 
@@ -237,8 +255,7 @@ expr parser::parse_primary(){
         consume(token_type::RIGHT_PAREN, "Expect ')' after expression.");
         return new expr_grouping(expr);
     }
-    // 语法错误，抛出异常
-    lox::raise_syntax_error(get_peer().get_line(), "Expect expression.");
+
     return nullptr;
 }
 

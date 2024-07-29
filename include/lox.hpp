@@ -14,7 +14,7 @@ namespace lox{
     void run_file(std::string_view);
 
     int match_prompt(std::string_view);
-    std::string entire_prompt();
+    std::string get_prompt();
     void run_prompt();
 
     void error(int, std::string_view);

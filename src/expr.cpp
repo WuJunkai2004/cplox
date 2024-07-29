@@ -186,10 +186,14 @@ token expr_get::accept(){
         lox::raise_runtime_error(obj.get_line(), "Only instances have properties.");
         return token(token_type::NIL, "", "", -1);
     }
-    if(class_table.find(obj.get_literal()) == class_table.end()){
+    if(class_register.count(obj.get_literal()) == 0){
         lox::raise_runtime_error(obj.get_line(), "Undefined class.");
         return token(token_type::NIL, "", "", -1);
     }
-    token method = env::get(name, class_table[obj.get_literal()]);
-    return token(method.get_type(), method.get_lexeme(), obj.get_literal() + "." + method.get_literal(), name.get_line());
+    token method_name(token_type::IDENTIFIER, 
+        obj.get_literal() + "." + name.get_lexeme(),
+        name.get_lexeme(),
+        name.get_line()
+    );
+    return env::get(method_name, env::global);
 }

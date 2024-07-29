@@ -66,7 +66,7 @@ void lox::run_prompt(){
     int empty_time = 0;
 
     while(empty_time != 2){
-        line = entire_prompt();
+        line = get_prompt();
 
         if(line == "pop"){
             std::cout<<"Popping environment\n";
@@ -127,7 +127,7 @@ int lox::match_prompt(std::string_view line){
 }
 
 
-std::string lox::entire_prompt(){
+std::string lox::get_prompt(){
     static int line_number = 0;
     std::string line;
     std::string buffer;
@@ -141,7 +141,7 @@ std::string lox::entire_prompt(){
 
     if(status == 2){
         error(line_number, "Unmatched braces");
-        return "";
+        return ";";
     };
     while(status == 1){
         std::cout<<"... ";
@@ -151,7 +151,7 @@ std::string lox::entire_prompt(){
         status = match_prompt(line);
         if(status == 2){
             error(line_number, "Unmatched braces");
-            return "";
+            return ";";
         };
     }
     return buffer;

@@ -20,6 +20,7 @@ private:
 
     expr parse_expression();        // 匹配表达式
     expr parse_assignment();        // 匹配赋值
+    expr parse_dot();               // 匹配点运算符
     expr parse_logical_or();        // 匹配逻辑或
     expr parse_logical_and();       // 匹配逻辑与
     expr parse_equality();          // 匹配等式

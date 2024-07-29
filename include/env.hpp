@@ -6,6 +6,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <set>
+
 #include "token.hpp"
 #include "token_type.hpp"
 #include "stmt.hpp"
@@ -41,25 +43,27 @@ public:
 
 using function_table = std::map<std::string, func>;
 
+inline std::set<std::string> class_register;
 
 class environment{
 private:
     environment* parent;
     symbol_table table;
     function_table fun;
+    std::map<std::string, symbol_table> ins;
 public:
     environment(environment* = nullptr);
     ~environment();
     bool exists(std::string);
     void define(std::string, var);
     void define_func(std::string, std::vector<token>, stmt);
+    void define_instance(std::string);
+    bool exists_instance(std::string);
+
     var  get(std::string);
     func get_func(std::string);
     environment* get_parent();
 };
-
-
-inline std::map<std::string, environment*> class_table;
 
 
 namespace env{
