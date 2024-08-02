@@ -153,7 +153,6 @@ void env::assign(std::string name, token value, environment* current){
         member = name.substr(dot_pos + 1);
         name = name.substr(0, dot_pos);
     }
-
     while(current != nullptr && not current->exists(name)){
         current = current->get_parent();
     }
@@ -179,11 +178,15 @@ token env::get(token name, environment* current){
     if(current->exists(ins_name)){
         var ins = current->get(ins_name);
         std::string method_name = ins.get_value() + "." + name.get_lexeme().substr(dot_pos + 1);
-        if(current->get_func(method_name).is_defined()){
+        if(func_exist(method_name, current)){
             return token(token_type::FUN, method_name, method_name, name.get_line());
         }
     }
-    return token(token_type::IDENTIFIER, name.get_lexeme(), name.get_lexeme(), name.get_line());
+    if(not current->exists(name.get_lexeme())){
+        return token(token_type::NIL, name.get_lexeme(), name.get_lexeme(), name.get_line());
+    }
+    var res = current->get(name.get_lexeme());
+    return token(res.get_type(), name.get_lexeme(), res.get_value(), name.get_line());
 }
 
 token env::get_arg(std::string name){
