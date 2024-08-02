@@ -57,8 +57,6 @@ public:
     bool exists(std::string);
     void define(std::string, var);
     void define_func(std::string, std::vector<token>, stmt);
-    void define_instance(std::string);
-    bool exists_instance(std::string);
 
     var  get(std::string);
     func get_func(std::string);
@@ -80,6 +78,7 @@ namespace env{
 
     token get(token, environment* = locale);
     token get_arg(std::string);
+    //token get_dot(std::string, std::string);
 
     bool func_exist(std::string, environment* current = locale);
     void func_define(std::string, std::vector<token>, stmt, environment* current = locale);

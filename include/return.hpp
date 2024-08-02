@@ -18,6 +18,7 @@ public:
     return_stack();
 
     void  into_scope();
+    token view_scope();
     token exit_scope();
     void  set();
     void  set(token);
@@ -27,5 +28,6 @@ public:
 
 inline return_stack ret_stack;
 inline return_stack brk_stack;
+inline return_stack this_stack;
 
 #endif // __RETURN_HPP__

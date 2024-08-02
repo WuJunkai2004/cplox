@@ -7,6 +7,7 @@
 #include "token_type.hpp"
 
 #include "error.hpp"
+#include "return.hpp"
 
 #include <iostream>
 
@@ -125,18 +126,20 @@ token expr_variable::accept(){
 }
 
 
-expr_assign::expr_assign(std::string name_, expr value_):
+expr_assign::expr_assign(expr name_, expr value_):
     name(name_),
     value(value_)
 {}
 
 expr_assign::~expr_assign(){
+    delete name;
     delete value;
 }
 
 token expr_assign::accept(){
+    token real_name = code::evaluate(this->name);
     token res = code::evaluate(value);
-    env::assign(name, res);
+    env::assign(real_name.get_lexeme(), res);
     return res;
 }
 
@@ -171,16 +174,16 @@ token expr_call::accept(){
 }
 
 
-expr_get::expr_get(expr object_, token name_):
+expr_dot::expr_dot(expr object_, token name_):
     object(object_),
     name(name_)
 {}
 
-expr_get::~expr_get(){
+expr_dot::~expr_dot(){
     delete object;
 }
 
-token expr_get::accept(){
+token expr_dot::accept(){
     token obj = code::evaluate(object);
     if(obj.get_type() != token_type::CLASS){
         lox::raise_runtime_error(obj.get_line(), "Only instances have properties.");
@@ -191,9 +194,18 @@ token expr_get::accept(){
         return token(token_type::NIL, "", "", -1);
     }
     token method_name(token_type::IDENTIFIER, 
-        obj.get_literal() + "." + name.get_lexeme(),
+        obj.get_lexeme() + "." + name.get_lexeme(),
         name.get_lexeme(),
         name.get_line()
     );
-    return env::get(method_name, env::global);
+    return env::get(method_name);
+}
+
+
+expr_this::expr_this(){}
+
+expr_this::~expr_this(){}
+
+token expr_this::accept(){
+    return this_stack.view_scope();
 }

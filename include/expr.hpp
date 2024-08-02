@@ -75,10 +75,10 @@ public:
 
 class expr_assign : public expr_base{
 private:
-    std::string name;
+    expr name;
     expr value;
 public:
-    expr_assign(std::string, expr);
+    expr_assign(expr, expr);
     ~expr_assign();
     token accept() override;
 };
@@ -95,13 +95,21 @@ public:
 };
 
 
-class expr_get : public expr_base{
+class expr_dot : public expr_base{
 private:
     expr object;
     token name;
 public:
-    expr_get(expr, token);
-    ~expr_get();
+    expr_dot(expr, token);
+    ~expr_dot();
+    token accept() override;
+};
+
+
+class expr_this : public expr_base{
+public:
+    expr_this();
+    ~expr_this();
     token accept() override;
 };
 

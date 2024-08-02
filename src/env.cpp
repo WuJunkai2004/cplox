@@ -147,6 +147,13 @@ void env::define(std::string name, token value, environment* current){
 }
 
 void env::assign(std::string name, token value, environment* current){
+    std::size_t dot_pos = name.find('.');
+    std::string member = "";
+    if(dot_pos != std::string::npos){
+        member = name.substr(dot_pos + 1);
+        name = name.substr(0, dot_pos);
+    }
+
     while(current != nullptr && not current->exists(name)){
         current = current->get_parent();
     }
@@ -154,12 +161,29 @@ void env::assign(std::string name, token value, environment* current){
         lox::error(value.get_line(), "Undefined variable '" + name + "'.");
         return;
     }
+    if(not member.empty()){
+        name = name + "." + member;
+    }
     current->define(name, var(value.get_type(), value.get_literal()));
 }
 
 token env::get(token name, environment* current){
-    var res = current->get(name.get_lexeme());
-    return token(res.get_type(), name.get_lexeme(), res.get_value(), name.get_line());
+    // find the dot
+    std::size_t dot_pos = name.get_lexeme().find('.');
+    if(dot_pos == std::string::npos){
+        var res = current->get(name.get_lexeme());
+        return token(res.get_type(), name.get_lexeme(), res.get_value(), name.get_line());
+    }
+    std::string ins_name = name.get_lexeme().substr(0, dot_pos);
+    // 查询实例是否存在
+    if(current->exists(ins_name)){
+        var ins = current->get(ins_name);
+        std::string method_name = ins.get_value() + "." + name.get_lexeme().substr(dot_pos + 1);
+        if(current->get_func(method_name).is_defined()){
+            return token(token_type::FUN, method_name, method_name, name.get_line());
+        }
+    }
+    return token(token_type::IDENTIFIER, name.get_lexeme(), name.get_lexeme(), name.get_line());
 }
 
 token env::get_arg(std::string name){

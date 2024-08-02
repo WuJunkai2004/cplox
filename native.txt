@@ -4,4 +4,7 @@ clock
 str
 num
 exit
-int
+round
+
+file
+list

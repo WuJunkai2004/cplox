@@ -25,8 +25,11 @@ enum class token_type{
 
     // Keywords
     // 关键字
-    AND, CLASS, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
-    BREAK, RETURN, SUPER, THIS, TRUE, VAR, WHILE,
+    AND, ELSE, FALSE, FUN, FOR, IF, NIL, OR,
+    BREAK, RETURN, SUPER, TRUE, VAR, WHILE,
+
+    // 类相关的关键字
+    CLASS, MEMBER, THIS,
 
     // End of file
     // 文件结束

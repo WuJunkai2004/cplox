@@ -88,23 +88,22 @@ expr parser::parse_expression(){
 
 
 expr parser::parse_assignment(){
-    expr the_expr = parse_logical_or();
+    expr the_expr = parse_dot();
     if(get_peer().get_type() == token_type::EQUAL){
-        token name = get_prev();
         advance();
         expr value = parse_assignment();
-        return new expr_assign(name.get_lexeme(), value);
+        return new expr_assign(the_expr, value);
     }
     return the_expr;
 }
 
 
 expr parser::parse_dot(){
-    expr the_expr = parse_term();
+    expr the_expr = parse_logical_or();
 
     while(match_peer(token_type::DOT)){
         token name = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
-        the_expr = new expr_get(the_expr, name);
+        the_expr = new expr_dot(the_expr, name);
     }
 
     return the_expr;
@@ -207,7 +206,7 @@ expr parser::parse_call(){
             the_expr = finish_call(the_expr);
         } else if (match_peer(token_type::DOT)){
             token name = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
-            the_expr = new expr_get(the_expr, name);
+            the_expr = new expr_dot(the_expr, name);
         } else {
             break;
         }
@@ -245,7 +244,7 @@ expr parser::parse_primary(){
             token name = get_prev();
             advance();
             token attr = consume(token_type::IDENTIFIER, "Expect property name after '.'.");
-            return new expr_get(new expr_variable(name), attr);
+            return new expr_dot(new expr_variable(name), attr);
         }
         return new expr_variable(get_prev());
     }

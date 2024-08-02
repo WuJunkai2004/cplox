@@ -18,6 +18,15 @@ void return_stack::into_scope(){
 }
 
 
+token return_stack::view_scope(){
+    if(current < 0){
+        lox::raise_runtime_error(-1, "return statement outside of function");
+        return token(token_type::NIL, "", "", -1);
+    }
+    return rets[current].value;
+}
+
+
 token return_stack::exit_scope(){
     token res = rets[current].value;
     rets.pop_back();
