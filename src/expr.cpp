@@ -158,8 +158,8 @@ expr_call::~expr_call(){
 
 token expr_call::accept(){
     token callee_var = code::evaluate(callee);
-    if(callee_var.get_type() != token_type::FUN){
-        lox::raise_runtime_error(callee_var.get_line(), "Can only call functions or classes.");
+    if(callee_var.get_type() != token_type::FUN && callee_var.get_type() != token_type::METHOD){
+        lox::raise_runtime_error(callee_var.get_line(), "Can only call functions or classes' methods.");
     }
     func callee_func = env::func_search(callee_var.get_literal());
     if(arguments.size() != callee_func.get_arity()){
@@ -170,7 +170,19 @@ token expr_call::accept(){
     for(auto arg: arguments){
         args.push_back(code::evaluate(arg));
     }
-    return code::call(callee_func, args);
+    if(callee_var.get_type() == token_type::METHOD){
+        this_stack.into_scope();
+        this_stack.set( token( token_type::CLASS, 
+                               callee_var.get_lexeme() .substr(0, callee_var.get_lexeme().find('.')), 
+                               callee_var.get_literal().substr(0, callee_var.get_literal().find('.')),
+                               callee_var.get_line()
+                        ));
+    }
+    token result = code::call(callee_func, args);
+    if(callee_var.get_type() == token_type::METHOD){
+        this_stack.exit_scope();
+    }
+    return result;
 }
 
 

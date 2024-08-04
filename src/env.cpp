@@ -175,12 +175,17 @@ token env::get(token name, environment* current){
     }
     std::string ins_name = name.get_lexeme().substr(0, dot_pos);
     // 查询实例是否存在
-    if(current->exists(ins_name)){
-        var ins = current->get(ins_name);
-        std::string method_name = ins.get_value() + "." + name.get_lexeme().substr(dot_pos + 1);
-        if(func_exist(method_name, current)){
-            return token(token_type::FUN, method_name, method_name, name.get_line());
-        }
+    while(current != nullptr && not current->exists(ins_name)){
+        current = current->get_parent();
+    }
+    if(current == nullptr){
+        lox::error(name.get_line(), "Undefined instance '" + ins_name + "'.");
+        return token(token_type::NIL, name.get_lexeme(), name.get_lexeme(), name.get_line());
+    }
+    var ins = current->get(ins_name);
+    std::string method_name = name.get_lexeme().substr(dot_pos + 1);
+    if(func_exist(ins.get_value()+"."+method_name, current)){
+        return token(token_type::METHOD, ins_name+"."+method_name, ins.get_value()+"."+method_name, name.get_line());
     }
     if(not current->exists(name.get_lexeme())){
         return token(token_type::NIL, name.get_lexeme(), name.get_lexeme(), name.get_line());

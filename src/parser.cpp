@@ -249,6 +249,10 @@ expr parser::parse_primary(){
         return new expr_variable(get_prev());
     }
 
+    if(match_peer(token_type::THIS)){
+        return new expr_this();
+    }
+
     if(match_peer(token_type::LEFT_PAREN)){
         expr expr = parse_expression();
         consume(token_type::RIGHT_PAREN, "Expect ')' after expression.");
@@ -418,7 +422,6 @@ stmt parser::parse_for_stmt(){
 
 
 stmt parser::parse_return_stmt(){
-    token keyword = get_prev();
     expr value = nullptr;
     if(get_peer().get_type() != token_type::SEMICOLON){
         value = parse_expression();

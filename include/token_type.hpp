@@ -29,7 +29,7 @@ enum class token_type{
     BREAK, RETURN, SUPER, TRUE, VAR, WHILE,
 
     // 类相关的关键字
-    CLASS, MEMBER, THIS,
+    CLASS, METHOD, THIS,
 
     // End of file
     // 文件结束

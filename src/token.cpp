@@ -198,6 +198,9 @@ std::ostream& operator<<(std::ostream& os, const token t){
         case token_type::CLASS:
             os << std::format("<class {0}>", t.literal);
             break;
+        case token_type::METHOD:
+            os << std::format("<method {0}>", t.literal);
+            break;
         default:
             os << t.literal;
             break;
