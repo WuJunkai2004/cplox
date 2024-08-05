@@ -170,18 +170,17 @@ token expr_call::accept(){
     for(auto arg: arguments){
         args.push_back(code::evaluate(arg));
     }
-    if(callee_var.get_type() == token_type::METHOD){
-        this_stack.into_scope();
-        this_stack.set( token( token_type::CLASS, 
-                               callee_var.get_lexeme() .substr(0, callee_var.get_lexeme().find('.')), 
-                               callee_var.get_literal().substr(0, callee_var.get_literal().find('.')),
-                               callee_var.get_line()
-                        ));
+    if(callee_var.get_type() == token_type::FUN){
+        return code::call(callee_func, args);
     }
+    this_stack.into_scope();
+    this_stack.set( token( token_type::CLASS, 
+                            callee_var.get_lexeme() .substr(0, callee_var.get_lexeme().find('.')), 
+                            callee_var.get_literal().substr(0, callee_var.get_literal().find('.')),
+                            callee_var.get_line()
+                    ));
     token result = code::call(callee_func, args);
-    if(callee_var.get_type() == token_type::METHOD){
-        this_stack.exit_scope();
-    }
+    this_stack.exit_scope();
     return result;
 }
 

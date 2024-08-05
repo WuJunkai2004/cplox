@@ -121,9 +121,9 @@ public:
 class stmt_init : public stmt_base{
 private:
     std::string class_name;
-    stmt_method* constructor;
+    stmt constructor;
 public:
-    stmt_init(std::string, stmt_method*);
+    stmt_init(std::string, stmt);
     ~stmt_init();
     void accept() override;
 };

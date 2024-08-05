@@ -75,6 +75,12 @@ bool environment::exists(std::string name){
 
 void environment::define(std::string name, var value){
     table[name] = value;
+    if(value.get_type() == token_type::CLASS && name != "this"){
+        for(auto& vars : returned_instance){
+            table[name + "." + vars.first] = vars.second;
+        }
+        returned_instance.clear();
+    }
 }
 
 void environment::define_func(std::string name, std::vector<token> params, stmt body){
@@ -98,6 +104,16 @@ func environment::get_func(std::string name){
 
 environment* environment::get_parent(){
     return parent;
+}
+
+symbol_table environment::get_this(){
+    symbol_table res;
+    for(auto& vars : table){
+        if(vars.first.length() > 5 && vars.first.substr(0, 5) == "this."){
+            res[vars.first.substr(5)] = vars.second;
+        }
+    }
+    return res;
 }
 
 
@@ -250,10 +266,9 @@ void env::class_define(std::string name, std::map<std::string, stmt_method*> met
         return;
     }
     class_register.insert(name);                        // 将类名加入类注册表
-    define(name, token(token_type::CLASS, name, "", 0), global); // 在全局环境中定义类名
     func_define(name, 
         methods["init"]->params, 
-        new stmt_init(name, methods["init"]),
+        new stmt_init(name, methods["init"]->body),
     global); // 在全局环境中定义初始化函数
     for(auto& method : methods){
         if(method.first == "init"){

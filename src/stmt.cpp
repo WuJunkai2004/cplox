@@ -169,7 +169,7 @@ void stmt_class::accept(){
 }
 
 
-stmt_init::stmt_init(std::string name_, stmt_method* constructor_):
+stmt_init::stmt_init(std::string name_, stmt constructor_):
     class_name(name_),
     constructor(constructor_)
 {}
@@ -179,6 +179,12 @@ stmt_init::~stmt_init(){
 }
 
 void stmt_init::accept(){
-    code::execute( constructor);
-    ret_stack.set( token(token_type::CLASS, class_name, class_name, -1) );
+    token this_token(token_type::CLASS, "this", class_name, -1);        // 创建this变量
+    env::define("this", this_token);                                    // 将this变量加入环境
+    this_stack.into_scope();                                            // 深入this栈
+    this_stack.set( this_token );                                       // 将this变量加入this栈
+    code::execute( constructor );                                       // 执行初始化函数
+    ret_stack.set( this_token );                                        // 返回this变量
+    this_stack.exit_scope();                                            // 退出this栈
+    returned_instance = env::locale->get_this();                        // 获取返回的实例
 }

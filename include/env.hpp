@@ -44,13 +44,13 @@ public:
 using function_table = std::map<std::string, func>;
 
 inline std::set<std::string> class_register;
+inline symbol_table returned_instance;
 
 class environment{
 private:
     environment* parent;
     symbol_table table;
     function_table fun;
-    std::map<std::string, symbol_table> ins;
 public:
     environment(environment* = nullptr);
     ~environment();
@@ -61,6 +61,7 @@ public:
     var  get(std::string);
     func get_func(std::string);
     environment* get_parent();
+    symbol_table get_this();
 };
 
 
