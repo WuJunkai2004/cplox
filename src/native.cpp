@@ -9,6 +9,7 @@
 #include <string>
 #include <chrono>
 #include <iostream>
+#include <fstream>
 #include <thread>
 
 
@@ -84,8 +85,55 @@ void native::func_sleep::accept(){
 }
 
 
+void native::file_init::accept(){
+    env::define("this.path", env::get_arg("path"));
+    token mode = env::get_arg("mode");
+    env::define("this.mode", mode);
+    env::define("this.__inner_mode__", mode);
+}
 
-// 导入原生函数
+void native::file_read::accept(){
+    token self = this_stack.view_scope();
+    std::string name = self.get_lexeme() + ".";
+    token path = env::get_arg(name + "path");
+    token mode = env::get_arg(name + "__inner_mode__");
+    if(mode.get_literal() != "r"){
+        ret_stack.set(token(token_type::NIL, "", "", 0));
+        return;
+    }
+    std::ifstream file(path.get_literal());
+    std::string content;
+    std::string line;
+    while(std::getline(file, line)){
+        content += line + "\n";
+    }
+    env::assign(name + "__inner_mode__", token(token_type::STRING, "", "eof", 0));
+    ret_stack.set(token(token_type::STRING, "", content, 0));
+    file.close();
+}
+
+
+void native::file_write::accept(){
+    token self = this_stack.view_scope();
+    std::string name = self.get_lexeme() + ".";
+    token path = env::get_arg(name + "path");
+    token mode = env::get_arg(name + "__inner_mode__");
+    if(mode.get_literal() != "w" && mode.get_literal() != "a"){
+        return;
+    }
+    std::ios_base::openmode open_mode = std::ios::out;
+    if(mode.get_literal() == "a"){
+        open_mode = std::ios::app;
+    }
+    std::ofstream file(path.get_literal(), open_mode);
+    token content = env::get_arg("content");
+    file<<content.get_literal();
+    env::assign(name + "__inner_mode__", token(token_type::STRING, "", "a", 0));
+    file.close();
+}
+
+
+// 导入原生函数和类
 void native::import(){
     // clock函数
     env::func_define(
@@ -142,4 +190,21 @@ void native::import(){
         std::vector<token>( {token(token_type::IDENTIFIER, "ms", "", 0)} ),
         new func_sleep()
     );
+
+    // file类
+    std::map<std::string, stmt_method*> file_methods;
+    file_methods["init"] = new stmt_method("file.init",
+        std::vector<token>({token(token_type::IDENTIFIER, "path", "", 0), 
+                            token(token_type::IDENTIFIER, "mode", "", 0)}),
+        new file_init()
+    );
+    file_methods["read"] = new stmt_method("file.read",
+        std::vector<token>(),
+        new file_read()
+    );
+    file_methods["write"] = new stmt_method("file.write",
+        std::vector<token>({token(token_type::IDENTIFIER, "content", "", 0)}),
+        new file_write()
+    );
+    env::class_define("file", file_methods);
 }

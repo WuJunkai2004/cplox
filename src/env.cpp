@@ -75,7 +75,7 @@ bool environment::exists(std::string name){
 
 void environment::define(std::string name, var value){
     table[name] = value;
-    if(value.get_type() == token_type::CLASS && name != "this"){
+    if(value.get_type() == token_type::CLASS && not returned_instance.empty() && name != "this"){
         for(auto& vars : returned_instance){
             table[name + "." + vars.first] = vars.second;
         }

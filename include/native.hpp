@@ -63,6 +63,22 @@ namespace native{
     };
 
 
+    class file_init : public native_func{
+    public:
+        void accept() override;
+    };
+
+    class file_read : public native_func{
+    public:
+        void accept() override;
+    };
+
+    class file_write : public native_func{
+    public:
+        void accept() override;
+    };
+
+
     void import();
 }
 
