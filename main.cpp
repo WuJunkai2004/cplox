@@ -8,13 +8,21 @@ int main(int argc_len, char* params[]){
     env::init();
     native::import();
 
-    if( argc_len > 2 ){
-        std::cerr<<"Usage: cplux [script path]";
-        return 64;
-    } else if( argc_len == 2 ){
-        lox::run_file(params[1]);
-    } else {
-        lox::run_prompt();
+    if( argc_len == 1 ){
+        lox::repl_mode();
+        return 0;
     }
+
+    if( argc_len == 2 ){
+        lox::file_mode mode = lox::get_file_mode(params[1]);
+        if(mode == lox::file_mode::UNCOMPILED){
+            lox::ast_mode(params[1]);
+        } else {
+            lox::interpret_mode(params[1]);
+        }
+        return 0;
+    }
+
+    lox::compile_mode(params[1]);
     return 0;
 }

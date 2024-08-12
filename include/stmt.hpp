@@ -25,7 +25,7 @@ private:
 public:
     stmt_expr(expr);
     ~stmt_expr();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -36,7 +36,7 @@ private:
 public:
     stmt_var(std::string, expr);
     ~stmt_var();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -46,7 +46,7 @@ private:
 public:
     stmt_block(std::vector<stmt>);
     ~stmt_block();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -58,7 +58,7 @@ private:
 public:
     stmt_if(expr, stmt, stmt);
     ~stmt_if();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -72,7 +72,7 @@ public:
     stmt_loop(expr, stmt);
     stmt_loop(stmt, expr, expr, stmt);
     ~stmt_loop();
-    void accept() override;
+    void accept() override final;
 };
 using stmt_while = stmt_loop;
 using stmt_for   = stmt_loop;
@@ -85,7 +85,7 @@ public:
     stmt body;
     stmt_function(std::string, std::vector<token>, stmt);
     ~stmt_function();
-    void accept() override;
+    void accept() override final;
 };
 using stmt_method = stmt_function;
 
@@ -96,14 +96,14 @@ private:
 public:
     stmt_return(expr);
     ~stmt_return();
-    void accept() override;
+    void accept() override final;
 };
 
 
 class stmt_break : public stmt_base{
 public:
     stmt_break();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -114,7 +114,7 @@ private:
 public:
     stmt_class(std::string, std::map<std::string, stmt_method*>);
     ~stmt_class();
-    void accept() override;
+    void accept() override final;
 };
 
 
@@ -125,7 +125,7 @@ private:
 public:
     stmt_init(std::string, stmt);
     ~stmt_init();
-    void accept() override;
+    void accept() override final;
 };
 
 

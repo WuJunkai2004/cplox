@@ -69,18 +69,19 @@ char scanner::get_next(){
 }
 
 
-void scanner::scan_string(){
+void scanner::scan_string(char end_char){
     std::map<char, char> escape_chars = {
         {'n', '\n'},
         {'r', '\r'},
         {'t', '\t'},
+        {'\'', '\''},
         {'"', '"'},
         {'\\', '\\'},
         {'0', '\0'},
         {'\n', '\n'}
     };
     std::string str;
-    while(get_peer() != '"' && !is_at_end()){
+    while(get_peer() != end_char && !is_at_end()){
         if(get_peer() == '\n'){
             line++;
         }
@@ -219,7 +220,8 @@ void scanner::scan_token(){
             line++;
             break;
         case '"':
-            scan_string();
+        case '\'':
+            scan_string(c);
             break;
         case '0' ... '9':
             scan_number();

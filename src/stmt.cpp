@@ -23,7 +23,7 @@ stmt_expr::~stmt_expr(){
 }
 
 void stmt_expr::accept(){
-    code::evaluate(expression);
+    code::interpreter::evaluate(expression);
 }
 
 
@@ -39,7 +39,7 @@ stmt_var::~stmt_var(){
 }
 
 void stmt_var::accept(){
-    env::define(name, code::evaluate(value));
+    env::define(name, code::interpreter::evaluate(value));
 }
 
 
@@ -54,7 +54,7 @@ stmt_block::~stmt_block(){
 }
 
 void stmt_block::accept(){
-    code::execute_block(statements);
+    code::interpreter::execute_block(statements);
 }
 
 
@@ -71,10 +71,10 @@ stmt_if::~stmt_if(){
 }
 
 void stmt_if::accept(){
-    if(code::evaluate(condition)){
-        code::execute(then_branch);
+    if(code::interpreter::evaluate(condition)){
+        code::interpreter::execute(then_branch);
     }else if(else_branch != nullptr){
-        code::execute(else_branch);
+        code::interpreter::execute(else_branch);
     }
 }
 
@@ -102,16 +102,16 @@ stmt_loop::~stmt_loop(){
 
 void stmt_loop::accept(){
     if(init != nullptr){
-        code::execute(init);
+        code::interpreter::execute(init);
     }
     brk_stack.into_scope();
-    while(code::evaluate(cond)){
-        code::execute(body);
+    while(code::interpreter::evaluate(cond)){
+        code::interpreter::execute(body);
         if(brk_stack.has_set()){
             break;
         }
         if(incr != nullptr){
-            code::evaluate(incr);
+            code::interpreter::evaluate(incr);
         }
     }
     brk_stack.exit_scope();
@@ -142,7 +142,7 @@ stmt_return::~stmt_return(){
 }
 
 void stmt_return::accept(){
-    ret_stack.set(code::evaluate(value));
+    ret_stack.set(code::interpreter::evaluate(value));
 }
 
 
@@ -183,7 +183,7 @@ void stmt_init::accept(){
     env::define("this", this_token);                                    // 将this变量加入环境
     this_stack.into_scope();                                            // 深入this栈
     this_stack.set( this_token );                                       // 将this变量加入this栈
-    code::execute( constructor );                                       // 执行初始化函数
+    code::interpreter::execute( constructor );                                       // 执行初始化函数
     ret_stack.set( this_token );                                        // 返回this变量
     this_stack.exit_scope();                                            // 退出this栈
     returned_instance = env::locale->get_this();                        // 获取返回的实例

@@ -28,7 +28,7 @@ private:
     char get_peer();
     char get_next();
 
-    void scan_string();
+    void scan_string(char);
     void scan_number();
     void scan_identifier();
 

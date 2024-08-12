@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 #include <format>
 #include <stack>
 
@@ -20,32 +21,27 @@
 #include "parser.hpp"
 
 
-void lox::run(std::string_view source){
-    if(had_global_error){
-        return;
-    }
+void lox::repl_mode(){
+    std::string line;
+    int empty_time = 0;
 
-    scanner token_scanner(source);
-    std::vector<token> tokens = token_scanner.scan_tokens();
+    while(empty_time != 2){
+        line = get_prompt();
 
-    parser token_parser(tokens);
-    std::vector<stmt> stmt_list;
-    try{
-        stmt_list = token_parser.parse();
-    } catch(syntax_error& e){
-        std::cerr << e.what() << std::endl;
-        had_global_error = true;
-    }
-    
-    if(had_global_error){
-        return;
-    }
+        if(line.empty()){
+            empty_time++;
+            continue;
+        } else {
+            empty_time = 0;
+        }
 
-    code::interpret(stmt_list);
+        run(line);
+        had_global_error = false;
+    }
 }
 
 
-void lox::run_file(std::string_view path){
+void lox::ast_mode(std::string_view path){
     std::ifstream fin(path.data());
     std::string file_buffer;
     std::string line;
@@ -61,41 +57,44 @@ void lox::run_file(std::string_view path){
     }
 }
 
-void lox::run_prompt(){
-    std::string line;
-    int empty_time = 0;
 
-    while(empty_time != 2){
-        line = get_prompt();
+void lox::compile_mode(std::string_view path){
 
-        if(line == "pop"){
-            std::cout<<"Popping environment\n";
-            env::pop();
-            continue;
-        }
-        if(line == "push"){
-            std::cout<<"Pushing environment\n";
-            env::push();
-            continue;
-        }
-        if(line.substr(0, 4) == "list"){
-            std::string var_name = line.substr(5);
-            func f = env::func_search(var_name);
-            std::cout<<"Function "<<var_name<<" defined: "<<f.is_defined()<<"\n";
-            std::cout<<"Function arity: "<<f.get_arity()<<"\n";
-            continue;
-        }
-        
-        if(line.empty()){
-            empty_time++;
-            continue;
-        } else {
-            empty_time = 0;
-        }
+}
 
-        run(line);
-        had_global_error = false;
+
+void lox::interpret_mode(std::string_view path){
+
+}
+
+
+lox::file_mode lox::get_file_mode(std::filesystem::path file_path){
+    if(file_path.extension() == ".loxvm"){
+        return file_mode::UNCOMPILED;
     }
+    return file_mode::COMPILED;
+}
+
+
+void lox::run(std::string_view source){
+    if(had_global_error){
+        return;
+    }
+
+    std::vector<token> tokens = code::generate_tokens(source);
+
+    std::vector<stmt> stmt_list;
+    try{
+        stmt_list = code::generate_ast(tokens);
+    } catch(syntax_error& e){
+        had_global_error = true;
+    }
+    
+    if(had_global_error){
+        return;
+    }
+
+    code::interpreter::interpret(stmt_list);
 }
 
 

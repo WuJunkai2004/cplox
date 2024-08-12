@@ -4,11 +4,25 @@
 #include "stmt.hpp"
 #include "token.hpp"
 #include "return.hpp"
+#include "parser.hpp"
+#include "scanner.hpp"
 
 #include <iostream>
 
 
-void code::interpret( std::vector<stmt> statements){
+std::vector<token> code::generate_tokens(std::string_view source){
+    scanner token_scanner(source);
+    return token_scanner.scan_tokens();
+}
+
+
+std::vector<stmt> code::generate_ast(std::vector<token> tokens){
+    parser token_parser(tokens);
+    return token_parser.parse();
+}
+
+
+void code::interpreter::interpret(std::vector<stmt> statements){
     try{
         for(auto& statement : statements){
             execute(statement);
@@ -22,7 +36,7 @@ void code::interpret( std::vector<stmt> statements){
 }
 
 
-void code::execute(stmt statement){
+void code::interpreter::execute(stmt statement){
     if(statement == nullptr){
         return;
     }
@@ -30,7 +44,7 @@ void code::execute(stmt statement){
 }
 
 
-token code::evaluate(expr expression){
+token code::interpreter::evaluate(expr expression){
     if(expression == nullptr){
         return token(token_type::NIL, "", "", -1);
     }
@@ -38,14 +52,14 @@ token code::evaluate(expr expression){
 }
 
 
-void code::execute_block(std::vector<stmt> statements){
+void code::interpreter::execute_block(std::vector<stmt> statements){
     env::push();
     interpret(statements);
     env::pop();
 }
 
 
-token code::call(func function, std::vector<token> arguments){
+token code::interpreter::call(func function, std::vector<token> arguments){
     env::push();
     ret_stack.into_scope();
     for(int i = 0; i < function.get_arity(); i++){
