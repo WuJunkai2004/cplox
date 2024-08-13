@@ -61,6 +61,14 @@ token expr_binary::accept(){
     return token(token_type::NIL, "", "", -1);
 }
 
+int expr_binary::build(){
+    int l_line_num = left->build();
+    int r_line_num = right->build();
+    code::compiler::assemble(operate.get_type());
+    return l_line_num + r_line_num + 1;
+}
+
+
 expr_unary::expr_unary(expr right_, token operate_):
     right(right_),
     operate(operate_)
@@ -89,6 +97,12 @@ token expr_unary::accept(){
     return result;
 }
 
+int expr_unary::build(){
+    int line_num = right->build();
+    code::compiler::assemble(operate.get_type());
+    return line_num + 1;
+}
+
 
 expr_literal::expr_literal(token value_):
     value(value_)
@@ -98,6 +112,11 @@ expr_literal::~expr_literal(){}
 
 token expr_literal::accept(){
     return value;
+}
+
+int expr_literal::build(){
+    code::compiler::assemble(value.get_type(), value.get_literal());
+    return 1;
 }
 
 
@@ -113,6 +132,10 @@ token expr_grouping::accept(){
     return code::interpreter::evaluate(expression);
 }
 
+int expr_grouping::build(){
+    return expression->build();
+}
+
 
 expr_variable::expr_variable(token attr_):
     attr(attr_)
@@ -123,6 +146,11 @@ expr_variable::~expr_variable(){}
 token expr_variable::accept(){
     token res = env::get(attr);
     return token(res.get_type(), res.get_lexeme(), res.get_literal(), attr.get_line());
+}
+
+int expr_variable::build(){
+    code::compiler::assemble(operation_code::GET_ITEM, attr.get_lexeme());
+    return 1;
 }
 
 
@@ -141,6 +169,13 @@ token expr_assign::accept(){
     token res = code::interpreter::evaluate(value);
     env::assign(real_name.get_lexeme(), res);
     return res;
+}
+
+int expr_assign::build(){
+    int value_line_num = value->build();
+    int name_line_num  = name->build();
+    code::compiler::assemble(operation_code::SET_ITEM);
+    return value_line_num + name_line_num + 1;
 }
 
 
@@ -184,6 +219,11 @@ token expr_call::accept(){
     return result;
 }
 
+int expr_call::build(){
+    // todo
+    return 0;
+}
+
 
 expr_dot::expr_dot(expr object_, token name_):
     object(object_),
@@ -212,6 +252,12 @@ token expr_dot::accept(){
     return env::get(method_name);
 }
 
+int expr_dot::build(){
+    int obj_line_num = object->build();
+    code::compiler::assemble(operation_code::GET_PROPERTY, name.get_lexeme());
+    return obj_line_num + 1;
+}
+
 
 expr_this::expr_this(){}
 
@@ -219,4 +265,9 @@ expr_this::~expr_this(){}
 
 token expr_this::accept(){
     return this_stack.view_scope();
+}
+
+int expr_this::build(){
+    code::compiler::assemble(operation_code::GET_ITEM, "this");
+    return 1;
 }

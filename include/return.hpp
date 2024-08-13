@@ -6,7 +6,7 @@
 #include <vector>
 #include "token.hpp"
 
-class return_stack{
+class vm_stack{
 private:
     int current;
     struct return_data{
@@ -15,7 +15,7 @@ private:
     };
     std::vector<return_data> rets;
 public:
-    return_stack();
+    vm_stack();
 
     void  into_scope();
     token view_scope();
@@ -24,10 +24,19 @@ public:
     void  set(token);
 
     bool  has_set();
+
+    token top();
+    token pop();
+    void  push(token);
 };
 
-inline return_stack ret_stack;
-inline return_stack brk_stack;
-inline return_stack this_stack;
+// 解释AST需要的栈
+inline vm_stack ret_stack;
+inline vm_stack brk_stack;
+inline vm_stack this_stack;
+
+// 解释bytecode需要的栈
+inline vm_stack value_stack;
+
 
 #endif // __RETURN_HPP__

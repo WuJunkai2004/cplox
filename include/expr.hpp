@@ -14,6 +14,7 @@ public:
     expr_base()  = default;
     virtual ~expr_base() = default;
     virtual token accept() = 0;
+    virtual int   build()  = 0;
 };
 
 using expr = expr_base*;
@@ -28,6 +29,7 @@ public:
     expr_binary(expr, expr, token);
     ~expr_binary();
     token accept() override final;
+    int   build()  override final;
 };
 using expr_logical = expr_binary;
 
@@ -40,6 +42,7 @@ public:
     expr_unary(expr, token);
     ~expr_unary();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -50,6 +53,7 @@ public:
     expr_literal(token);
     ~expr_literal();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -60,6 +64,7 @@ public:
     expr_grouping(expr);
     ~expr_grouping();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -70,6 +75,7 @@ public:
     expr_variable(token);
     ~expr_variable();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -81,6 +87,7 @@ public:
     expr_assign(expr, expr);
     ~expr_assign();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -92,6 +99,7 @@ public:
     expr_call(expr, std::vector<expr>);
     ~expr_call();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -103,6 +111,7 @@ public:
     expr_dot(expr, token);
     ~expr_dot();
     token accept() override final;
+    int   build()  override final;
 };
 
 
@@ -111,6 +120,7 @@ public:
     expr_this();
     ~expr_this();
     token accept() override final;
+    int   build()  override final;
 };
 
 #endif // __EXPR_HPP__

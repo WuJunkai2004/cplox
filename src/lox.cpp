@@ -42,12 +42,7 @@ void lox::repl_mode(){
 
 
 void lox::ast_mode(std::string_view path){
-    std::ifstream fin(path.data());
-    std::string file_buffer;
-    std::string line;
-    while(std::getline(fin, line)){
-        file_buffer.append(line);
-    }
+    std::string file_buffer = get_file(path);
     run(file_buffer);
     if(had_global_error){
         exit(65);
@@ -59,7 +54,11 @@ void lox::ast_mode(std::string_view path){
 
 
 void lox::compile_mode(std::string_view path){
-
+    std::string file_buffer = get_file(path);
+    std::vector<token> tokens = code::generate_tokens(file_buffer);
+    std::vector<stmt>  stmt_list = code::generate_ast(tokens);
+    code::compiler::compile(stmt_list);
+    code::compiler::save(path);
 }
 
 
@@ -154,6 +153,17 @@ std::string lox::get_prompt(){
         };
     }
     return buffer;
+}
+
+
+std::string lox::get_file(std::string_view path){
+    std::ifstream fin(path.data());
+    std::string file_buffer;
+    std::string line;
+    while(std::getline(fin, line)){
+        file_buffer.append(line);
+    }
+    return file_buffer;
 }
 
 

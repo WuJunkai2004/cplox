@@ -69,3 +69,81 @@ token code::interpreter::call(func function, std::vector<token> arguments){
     env::pop();
     return ret_stack.exit_scope();
 }
+
+
+/* =============================== */
+/* =============================== */
+
+
+void code::compiler::compile(std::vector<stmt> statements){
+    for(auto& statement : statements){
+        statement->build();
+    }
+}
+
+
+bcode code::compiler::generate_node(token_type type, std::string value){
+    std::map<token_type, operation_code> convert = {
+        {token_type::MINUS,         operation_code::NEGATE},
+        {token_type::PLUS,          operation_code::ADD},
+        {token_type::STAR,          operation_code::MULTIPLY},
+        {token_type::SLASH,         operation_code::DIVIDE},
+        {token_type::GREATER,       operation_code::GREATER},
+        {token_type::GREATER_EQUAL, operation_code::GREATER_EQUAL},
+        {token_type::LESS,          operation_code::LESS},
+        {token_type::LESS_EQUAL,    operation_code::LESS_EQUAL},
+        {token_type::EQUAL,         operation_code::SET_ITEM},      //待修改
+        {token_type::EQUAL_EQUAL,    operation_code::EQUAL},
+        {token_type::BANG_EQUAL,    operation_code::NOT_EQUAL},
+        {token_type::AND,           operation_code::AND},
+        {token_type::OR,            operation_code::OR},
+        {token_type::BANG,          operation_code::NEGATE},
+        {token_type::NUMBER,        operation_code::CONSTANT},
+        {token_type::STRING,        operation_code::CONSTANT},
+        {token_type::NIL,           operation_code::CONSTANT},
+        {token_type::TRUE,          operation_code::CONSTANT},
+        {token_type::FALSE,         operation_code::CONSTANT},
+    };
+    if(convert.find(type) != convert.end()){
+        return bcode(convert[type], value);
+    }
+    std::cout<<"[ERROR] Unknown token type: "<< static_cast<int>(type) << std::endl;
+    return bcode(operation_code::ILLEGAL, value);
+}
+
+bcode code::compiler::generate_node(operation_code op, std::string value){
+    return bcode(op, value);
+}
+
+
+int code::compiler::assemble(token_type type, std::string value){
+    bcode node = generate_node(type, value);
+    byte_code_array.push_back(node);
+    return byte_code_array.size() - 1;
+}
+
+int code::compiler::assemble(operation_code op, std::string value){
+    bcode node = generate_node(op, value);
+    byte_code_array.push_back(node);
+    return byte_code_array.size() - 1;
+}
+
+
+void code::compiler::modify(int index, token_type type, std::string value){
+    bcode node = generate_node(type, value);
+    byte_code_array[index] = node;
+}
+
+void code::compiler::modify(int index, operation_code op, std::string value){
+    bcode node = generate_node(op, value);
+    byte_code_array[index] = node;
+}
+
+void code::compiler::save(std::filesystem::path save_path){
+    std::cout<<"[INFO] Saving compiled file to: "<<save_path.().string()<<".loxvm"<<std::endl;
+    std::ofstream file(save_path.filename().string() + ".loxvm", std::ios::out);
+    for(const bcode& node : byte_code_array){
+        file << bcode_to_string(node) << '\n';
+    }
+    file.close();
+}

@@ -27,6 +27,7 @@ namespace lox{
 
     int match_prompt(std::string_view);
     std::string get_prompt();
+    std::string get_file(std::string_view);
 
     void error(int, std::string_view);
     void report(int, std::string_view, std::string_view);

@@ -28,9 +28,17 @@ void native::func_clock::accept(){
     ret_stack.set(res);
 }
 
+int native::func_clock::build(){
+    return 0;
+}
+
 
 void native::func_print::accept(){
     std::cout<<env::get_arg("content")<<std::endl;
+}
+
+int native::func_print::build(){
+    return 0;
 }
 
 
@@ -38,6 +46,10 @@ void native::func_input::accept(){
     std::string content;
     std::cin>>content;
     ret_stack.set(token(token_type::STRING, "", content, 0));
+}
+
+int native::func_input::build(){
+    return 0;
 }
 
 
@@ -53,16 +65,28 @@ void native::func_num::accept(){
     ret_stack.set(token(token_type::NUMBER, "", std::to_string(res), 0));
 }
 
+int native::func_num::build(){
+    return 0;
+}
+
 
 void native::func_str::accept(){
     token value = env::get_arg("value");
     ret_stack.set(token(token_type::STRING, "", value.get_literal(), 0));
 }
 
+int native::func_str::build(){
+    return 0;
+}
+
 
 void native::func_exit::accept(){
     token code = env::get_arg("code");
     exit(static_cast<int>(std::stod(code.get_literal())));
+}
+
+int native::func_exit::build(){
+    return 0;
 }
 
 
@@ -78,10 +102,18 @@ void native::func_int::accept(){
     ret_stack.set(token(token_type::NUMBER, "", std::to_string(res), 0));
 }
 
+int native::func_int::build(){
+    return 0;
+}
+
 
 void native::func_sleep::accept(){
     token value = env::get_arg("ms");
     std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(std::stod(value.get_literal()))));
+}
+
+int native::func_sleep::build(){
+    return 0;
 }
 
 
@@ -90,6 +122,10 @@ void native::file_init::accept(){
     token mode = env::get_arg("mode");
     env::define("this.mode", mode);
     env::define("this.__inner_mode__", mode);
+}
+
+int native::file_init::build(){
+    return 0;
 }
 
 void native::file_read::accept(){
@@ -112,6 +148,10 @@ void native::file_read::accept(){
     file.close();
 }
 
+int native::file_read::build(){
+    return 0;
+}
+
 
 void native::file_write::accept(){
     token self = this_stack.view_scope();
@@ -130,6 +170,10 @@ void native::file_write::accept(){
     file<<content.get_literal();
     env::assign(name + "__inner_mode__", token(token_type::STRING, "", "a", 0));
     file.close();
+}
+
+int native::file_write::build(){
+    return 0;
 }
 
 
