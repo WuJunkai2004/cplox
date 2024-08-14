@@ -46,8 +46,9 @@ void stmt_var::accept(){
 
 int stmt_var::build(){
     int value_line = value->build();
-    code::compiler::assemble(operation_code::SET_LOCAL, name);
-    return value_line + 1;
+    code::compiler::assemble(operation_code::CONSTANT, name);
+    code::compiler::assemble(operation_code::SET_ITEM);
+    return value_line + 2;
 }
 
 
@@ -187,16 +188,17 @@ void stmt_function::accept(){
 }
 
 int stmt_function::build(){
-    code::compiler::assemble(operation_code::FUNC, name);
+    code::compiler::assemble(operation_code::FUNC, name+","+std::to_string(params.size()));
     int ignore_pos = code::compiler::assemble(operation_code::JUMP);
     code::compiler::assemble(operation_code::SET_LOCAL);
     for(auto& param : params){
-        code::compiler::assemble(operation_code::SET_ITEM, vm::token_to_string(param));
+        code::compiler::assemble(operation_code::CONSTANT, param.get_lexeme());
+        code::compiler::assemble(operation_code::SET_ITEM);
     }
     int body_line = body->build();
     code::compiler::assemble(operation_code::END_LOCAL);
-    code::compiler::modify(ignore_pos, operation_code::JUMP, std::to_string(2 + params.size() + body_line));
-    return 3 + params.size() + body_line + 1;
+    code::compiler::modify(ignore_pos, operation_code::JUMP, std::to_string(2 + 2 * params.size() + body_line));
+    return 3 + 2 * params.size() + body_line + 1;
 }
 
 

@@ -62,8 +62,8 @@ token expr_binary::accept(){
 }
 
 int expr_binary::build(){
-    int l_line_num = left->build();
     int r_line_num = right->build();
+    int l_line_num = left->build();
     code::compiler::assemble(operate.get_type());
     return l_line_num + r_line_num + 1;
 }
@@ -115,7 +115,7 @@ token expr_literal::accept(){
 }
 
 int expr_literal::build(){
-    code::compiler::assemble(value.get_type(), value.get_literal());
+    code::compiler::assemble(value.get_type(), value.to_string());
     return 1;
 }
 
@@ -220,8 +220,13 @@ token expr_call::accept(){
 }
 
 int expr_call::build(){
-    // todo
-    return 0;
+    int total_line_num = 0;
+    for(int idx=arguments.size()-1; idx>=0; idx--){
+        total_line_num += arguments[idx]->build();
+    }
+    total_line_num += callee->build();
+    code::compiler::assemble(operation_code::CALL, std::to_string(arguments.size()));
+    return total_line_num + 1;
 }
 
 
@@ -254,7 +259,7 @@ token expr_dot::accept(){
 
 int expr_dot::build(){
     int obj_line_num = object->build();
-    code::compiler::assemble(operation_code::GET_PROPERTY, name.get_lexeme());
+    code::compiler::assemble(operation_code::GET_PROPERTY, name.to_string());
     return obj_line_num + 1;
 }
 

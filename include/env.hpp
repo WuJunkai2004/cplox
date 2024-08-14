@@ -31,13 +31,15 @@ class func{
 private:
     std::vector<token> params;
     stmt body;
-    bool defined = false;
+    int  defined;
 public:
     func();
     func(std::vector<token>, stmt);
+    func(std::vector<token>, int);
     int get_arity();
     stmt get_body();
     std::string get_param(int);
+    int get_defined();
     bool is_defined();
 };
 
@@ -56,6 +58,7 @@ public:
     ~environment();
     bool exists(std::string);
     void define(std::string, var);
+    void define_func(std::string, std::vector<token>, int);
     void define_func(std::string, std::vector<token>, stmt);
 
     var  get(std::string);
@@ -79,9 +82,9 @@ namespace env{
 
     token get(token, environment* = locale);
     token get_arg(std::string);
-    //token get_dot(std::string, std::string);
 
     bool func_exist(std::string, environment* current = locale);
+    void func_define(std::string, int, int, environment* current = locale);
     void func_define(std::string, std::vector<token>, stmt, environment* current = locale);
     func func_search(std::string);
 

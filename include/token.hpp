@@ -18,13 +18,15 @@ private:
     std::string literal;    // 字面量，即词法单元的值
     int line;
 public:
+    token() = default;
     token(token_type, std::string_view, std::string_view, int);
-    std::string to_string();
 
     token_type get_type();
     int        get_line();
     std::string get_lexeme();
     std::string get_literal();
+
+    std::string to_string();
 
     token operator+(token);
     token operator-(token);

@@ -32,15 +32,21 @@ std::string var::get_value(){
  * @brief 函数类
 */
 func::func():
-    defined(false),
+    defined(-1),
     params(),
     body(nullptr)
 {}
 
 func::func(std::vector<token> params_, stmt body_):
-    defined(true),
+    defined(0),
     params(params_),
     body(body_)
+{}
+
+func::func(std::vector<token> params_, int defined_):
+    defined(defined_),
+    params(params_),
+    body(nullptr)
 {}
 
 int func::get_arity(){
@@ -55,8 +61,12 @@ std::string func::get_param(int index){
     return params[index].get_lexeme();
 }
 
-bool func::is_defined(){
+int func::get_defined(){
     return defined;
+}
+
+bool func::is_defined(){
+    return defined != -1;
 }
 
 
@@ -81,6 +91,10 @@ void environment::define(std::string name, var value){
         }
         returned_instance.clear();
     }
+}
+
+void environment::define_func(std::string name, std::vector<token> params, int defined){
+    fun[name] = func(params, defined);
 }
 
 void environment::define_func(std::string name, std::vector<token> params, stmt body){
@@ -222,6 +236,15 @@ token env::get_arg(std::string name){
 
 bool env::func_exist(std::string name, environment* current){
     return current->exists(name) && current->get(name).get_type() == token_type::FUN;
+}
+
+void env::func_define(std::string name, int arity_num, int defined_pos, environment* current){
+    if(func_exist(name, current)){
+        lox::error(-1, "Function '" + name + "' already declared in this scope.");
+        return;
+    }
+    current->define      (name, var(token_type::FUN, name));
+    current->define_func (name, std::vector<token>(arity_num), defined_pos);
 }
 
 void env::func_define(std::string name, std::vector<token> params, stmt body, environment* current){

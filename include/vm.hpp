@@ -4,6 +4,7 @@
 #define __vm_hpp__
 
 #include "token.hpp"
+#include "env.hpp"
 #include <stack>
 #include <string>
 #include <vector>
@@ -101,6 +102,52 @@ inline std::map<operation_code, std::string> opcode_map = {
     {operation_code::ILLEGAL,       "ILLEGAL"}
 };
 
+inline std::map<std::string, operation_code> opcode_map_reverse = {
+    {"CONSTANT",      operation_code::CONSTANT},
+    {"NIL",           operation_code::NIL},
+    {"TRUE",          operation_code::TRUE},
+    {"FALSE",         operation_code::FALSE},
+    {"POP",           operation_code::POP},
+    {"GET_ITEM",      operation_code::GET_ITEM},
+    {"SET_ITEM",      operation_code::SET_ITEM},
+    {"SET_LOCAL",     operation_code::SET_LOCAL},
+    {"END_LOCAL",     operation_code::END_LOCAL},
+    {"GET_UPVALUE",   operation_code::GET_UPVALUE},
+    {"SET_UPVALUE",   operation_code::SET_UPVALUE},
+    {"GET_PROPERTY",  operation_code::GET_PROPERTY},
+    {"SET_PROPERTY",  operation_code::SET_PROPERTY},
+    {"GET_SUPER",     operation_code::GET_SUPER},
+    {"NOT_EQUAL",     operation_code::NOT_EQUAL},
+    {"EQUAL",         operation_code::EQUAL},
+    {"GREATER",       operation_code::GREATER},
+    {"GREATER_EQUAL", operation_code::GREATER_EQUAL},
+    {"LESS",          operation_code::LESS},
+    {"LESS_EQUAL",    operation_code::LESS_EQUAL},
+    {"ADD",           operation_code::ADD},
+    {"SUBTRACT",      operation_code::SUBTRACT},
+    {"MULTIPLY",      operation_code::MULTIPLY},
+    {"DIVIDE",        operation_code::DIVIDE},
+    {"AND",           operation_code::AND},
+    {"OR",            operation_code::OR},
+    {"NEGATE",        operation_code::NEGATE},
+    {"JUMP",          operation_code::JUMP},
+    {"JUMP_TO",       operation_code::JUMP_TO},
+    {"JUMP_IF_F",     operation_code::JUMP_IF_F},
+    {"LOOP",          operation_code::LOOP},
+    {"CALL",          operation_code::CALL},
+    {"FUNC",          operation_code::FUNC},
+    {"INVOKE",        operation_code::INVOKE},
+    {"SUPER_INVOKE",  operation_code::SUPER_INVOKE},
+    {"CLOSURE",       operation_code::CLOSURE},
+    {"CLOSE_UPVALUE", operation_code::CLOSE_UPVALUE},
+    {"RETURN",        operation_code::RETURN},
+    {"BREAK",         operation_code::BREAK},
+    {"CLASS",         operation_code::CLASS},
+    {"INHERIT",       operation_code::INHERIT},
+    {"METHOD",        operation_code::METHOD},
+    {"ILLEGAL",       operation_code::ILLEGAL}
+};
+
 
 
 struct bytecode{
@@ -114,10 +161,12 @@ std::string bcode_to_string(bcode);
 
 namespace vm{
     inline std::stack<int> call_stack;
+    inline std::stack<environment*> env_stack;
 
     void run(const std::vector<bcode>&);
+
     token string_to_token(std::string);
-    std::string token_to_string(token);
+    int split_params(std::string);
 }
 
 
