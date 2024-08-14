@@ -13,10 +13,6 @@ token::token(token_type type_, std::string_view lexeme_, std::string_view litera
     : type(type_), lexeme(lexeme_), literal(literal_), line(line_){}
 
 
-std::string token::to_string(){
-    return std::format("{0} {1} {2}", token_names[type], lexeme, literal);
-}
-
 token_type token::get_type(){
     return type;
 }
@@ -175,6 +171,49 @@ token::operator bool(){
         return false;
     }
     return type == token_type::TRUE;
+}
+
+
+std::string token::to_string(){
+    switch(type){
+        case token_type::TRUE:
+            return "true";
+        case token_type::FALSE:
+            return "false";
+        case token_type::NIL:
+            return "nil";
+        case token_type::STRING:{
+            std::string res="\"";
+            for(auto c : literal){
+                switch(c){
+                    case '\n':
+                        res += "\\n";
+                        break;
+                    case '\r':
+                        res += "\\r";
+                        break;
+                    case '\t':
+                        res += "\\t";
+                        break;
+                    case '\\':
+                        res += "\\\\";
+                        break;
+                    case '"':
+                        res += "\\\"";
+                        break;
+                    default:
+                        res += c;
+                        break;
+                }
+            }
+            res += "\"";
+            return res;
+        }
+        case token_type::NUMBER:
+            return literal;
+        default:
+            return "nil";
+    }
 }
 
 

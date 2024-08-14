@@ -7,6 +7,7 @@
 #include "expr.hpp"
 #include "stmt.hpp"
 #include "token.hpp"
+#include "return.hpp"
 #include "vm.hpp"
 
 #include <vector>
@@ -18,6 +19,7 @@ namespace code{
     std::vector<token> generate_tokens(std::string_view);
     std::vector<stmt>  generate_ast(std::vector<token>);
     std::vector<bcode> generate_bcode(std::vector<stmt>);
+    std::vector<bcode> generate_bcode(std::filesystem::path);
 
     namespace interpreter{
         void interpret(std::vector<stmt>);
@@ -52,7 +54,9 @@ namespace code{
 
 
     namespace vm{
-        void interpret(std::vector<stmt>);
+        void interpret(std::vector<bcode>);
+
+        int call(vm_stack&, int);
     }
 };
 

@@ -3,6 +3,7 @@
 #include "token_type.hpp"
 #include "env.hpp"
 #include "return.hpp"
+#include "code.hpp"
 #include <string>
 #include <stack>
 #include <vector>
@@ -39,9 +40,11 @@ void vm::run(const std::vector<bcode>& codes){
             case operation_code::GET_ITEM:
                 value_stack.push( env::get_arg(codes[index].value) );
                 break;
-            case operation_code::SET_ITEM:
-                env::define(codes[index].value, value_stack.top());
+            case operation_code::SET_ITEM:{
+                std::string name = value_stack.pop().get_literal();
+                env::define(name, value_stack.pop());
                 break;
+            }
             case operation_code::SET_LOCAL:
                 env::push();
                 break;
@@ -85,13 +88,49 @@ void vm::run(const std::vector<bcode>& codes){
                 break;
             }
             case operation_code::JUMP:
-                index = std::stoi(codes[index].value);
+                index += std::stoi(codes[index].value);
                 break;
             case operation_code::JUMP_IF_F:
                 if(!value_stack.pop()){
                     index = std::stoi(codes[index].value);
                 }
                 break;
+            case operation_code::JUMP_TO:
+                index = std::stoi(codes[index].value);
+                break;
+            case operation_code::CALL:
+                ret_stack.into_scope();             // 进入函数调用
+                call_stack.push(index);             // 保存返回地址
+                index = code::vm::call(             // 如果是原生函数，直接调用; 否则返回函数体的起始位置
+                    value_stack,
+                    std::stoi(codes[index].value)
+                );
+                if(index == -1){                    // 是原生函数，直接返回
+                    index = call_stack.top();       // 恢复返回地址
+                    call_stack.pop();               // 弹出返回地址
+                    value_stack.push(ret_stack.exit_scope()); // 将返回值压入栈
+                    break;
+                }
+                env_stack.push(env::locale);        // 保存当前环境
+                break;
+            case operation_code::RETURN:
+                index = call_stack.top();
+                call_stack.pop();
+                ret_stack.set(value_stack.pop());
+                while(env::locale != env_stack.top()){
+                    env::pop();
+                }
+                env_stack.pop();
+                value_stack.push(ret_stack.exit_scope());
+                break;
+            case operation_code::FUNC:{
+                std::size_t pos = codes[index].value.find(',');
+                env::func_define(
+                    codes[index].value.substr(0, pos),
+                    std::stoi(codes[index].value.substr(pos + 1)),
+                    index + 1
+                );
+            }
             default:
                 break;
 
@@ -129,47 +168,10 @@ token vm::string_to_token(std::string str){
     if(is_number && dot_count <= 1){
         return token(token_type::NUMBER, str, str, 0);
     }
-    return token(token_type::NIL, "nil", "nil", 0);
+    return token(token_type::IDENTIFIER, str, str, 0);
 }
 
-std::string vm::token_to_string(token t){
-    switch(t.get_type()){
-        case token_type::TRUE:
-            return "true";
-        case token_type::FALSE:
-            return "false";
-        case token_type::NIL:
-            return "nil";
-        case token_type::STRING:{
-            std::string res="\"";
-            for(auto c : t.get_literal()){
-                switch(c){
-                    case '\n':
-                        res += "\\n";
-                        break;
-                    case '\r':
-                        res += "\\r";
-                        break;
-                    case '\t':
-                        res += "\\t";
-                        break;
-                    case '\\':
-                        res += "\\\\";
-                        break;
-                    case '"':
-                        res += "\\\"";
-                        break;
-                    default:
-                        res += c;
-                        break;
-                }
-            }
-            res += "\"";
-            return res;
-        }
-        case token_type::NUMBER:
-            return t.get_literal();
-        default:
-            return "nil";
-    }
+int vm::split_params(std::string value){ //split by ','
+    std::size_t pos = value.find(',');
+    return std::stoi(value.substr(pos + 1));
 }

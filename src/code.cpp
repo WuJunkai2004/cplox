@@ -6,8 +6,14 @@
 #include "return.hpp"
 #include "parser.hpp"
 #include "scanner.hpp"
+#include "native.hpp"
+#include "vm.hpp"
 
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <vector>
+#include <string>
 
 
 std::vector<token> code::generate_tokens(std::string_view source){
@@ -19,6 +25,26 @@ std::vector<token> code::generate_tokens(std::string_view source){
 std::vector<stmt> code::generate_ast(std::vector<token> tokens){
     parser token_parser(tokens);
     return token_parser.parse();
+}
+
+
+std::vector<bcode> code::generate_bcode(std::filesystem::path file_path){
+    std::ifstream fin(file_path);
+    std::string line;
+    std::vector<bcode> byte_code_array;
+    while(std::getline(fin, line)){
+        std::size_t pos = line.find(' ');
+        if(pos == std::string::npos){
+            byte_code_array.push_back(bcode(
+                opcode_map_reverse[line], ""
+            ));
+        } else {
+            byte_code_array.push_back(bcode(
+                opcode_map_reverse[line.substr(0, pos)], line.substr(pos+1)
+            ));
+        }
+    }
+    return byte_code_array;
 }
 
 
@@ -84,7 +110,7 @@ void code::compiler::compile(std::vector<stmt> statements){
 
 bcode code::compiler::generate_node(token_type type, std::string value){
     std::map<token_type, operation_code> convert = {
-        {token_type::MINUS,         operation_code::NEGATE},
+        {token_type::MINUS,         operation_code::SUBTRACT},
         {token_type::PLUS,          operation_code::ADD},
         {token_type::STAR,          operation_code::MULTIPLY},
         {token_type::SLASH,         operation_code::DIVIDE},
@@ -140,10 +166,40 @@ void code::compiler::modify(int index, operation_code op, std::string value){
 }
 
 void code::compiler::save(std::filesystem::path save_path){
-    std::cout<<"[INFO] Saving compiled file to: "<<save_path.().string()<<".loxvm"<<std::endl;
-    std::ofstream file(save_path.filename().string() + ".loxvm", std::ios::out);
+    std::ofstream file(save_path.stem().string() + ".loxvm", std::ios::out);
     for(const bcode& node : byte_code_array){
         file << bcode_to_string(node) << '\n';
     }
     file.close();
+}
+
+
+/* =============================== */
+/* =============================== */
+
+
+void code::vm::interpret(std::vector<bcode> statements){
+    ::vm::run(statements);
+}
+
+
+int code::vm::call(vm_stack& stack, int arity){
+    token callee_var = stack.pop();
+    std::string callee_name = callee_var.get_literal();
+    func  callee_func = env::func_search(callee_name);
+    if(callee_func.get_arity() != arity){
+        std::cerr << "Function " << callee_name << " expects " << callee_func.get_arity() << " arguments, but got " << arity << std::endl;
+        return -1;
+    }
+    if(native::native_func_register.find(callee_name) != native::native_func_register.end()){
+        // native function
+        env::push();
+        for(int i = arity - 1; i >= 0; i--){
+            env::define(callee_func.get_param(i), stack.pop());
+        }
+        native::native_func_register[callee_name]->accept();
+        env::pop();
+        return -1;
+    }
+    return callee_func.get_defined();
 }
