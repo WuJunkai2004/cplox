@@ -63,15 +63,16 @@ void lox::compile_mode(std::string_view path){
 
 
 void lox::interpret_mode(std::string_view path){
-
+    std::vector<bcode> byte_code_array = code::generate_bcode(path);
+    code::vm::interpret(byte_code_array);
 }
 
 
 lox::file_mode lox::get_file_mode(std::filesystem::path file_path){
     if(file_path.extension() == ".loxvm"){
-        return file_mode::UNCOMPILED;
+        return file_mode::COMPILED;
     }
-    return file_mode::COMPILED;
+    return file_mode::UNCOMPILED;
 }
 
 
