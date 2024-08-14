@@ -89,9 +89,10 @@ namespace native{
         int  build() override final;
     };
 
+    inline std::map<std::string, native_func*> native_func_register;
 
     void import();
-    void regist();
+    void register_native();
 }
 
 

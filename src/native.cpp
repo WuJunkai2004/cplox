@@ -179,39 +179,41 @@ int native::file_write::build(){
 
 // 导入原生函数和类
 void native::import(){
+    register_native();
+
     // clock函数
     env::func_define(
         "clock",
         std::vector<token>(),
-        new func_clock()
+        native_func_register["clock"]
     );
 
     // print函数
     env::func_define(
         "print",
         std::vector<token>( {token(token_type::IDENTIFIER, "content", "", 0)} ),
-        new func_print()
+        native_func_register["print"]
     );
 
     // input函数
     env::func_define(
         "input",
         std::vector<token>(),
-        new func_input()
+        native_func_register["input"]
     );
 
     // num函数
     env::func_define(
         "num",
         std::vector<token>( {token(token_type::IDENTIFIER, "value", "", 0)} ),
-        new func_num()
+        native_func_register["num"]
     );
 
     // str函数
     env::func_define(
         "str",
         std::vector<token>( {token(token_type::IDENTIFIER, "value", "", 0)} ),
-        new func_str()
+        native_func_register["str"]
     );
 
     // exit函数
@@ -223,16 +225,16 @@ void native::import(){
 
     // int函数
     env::func_define(
-        "int",
+        "round",
         std::vector<token>( {token(token_type::IDENTIFIER, "value", "", 0)} ),
-        new func_int()
+        native_func_register["round"]
     );
 
     // sleep函数
     env::func_define(
         "sleep",
         std::vector<token>( {token(token_type::IDENTIFIER, "ms", "", 0)} ),
-        new func_sleep()
+        native_func_register["sleep"]
     );
 
     // file类
@@ -240,15 +242,30 @@ void native::import(){
     file_methods["init"] = new stmt_method("file.init",
         std::vector<token>({token(token_type::IDENTIFIER, "path", "", 0), 
                             token(token_type::IDENTIFIER, "mode", "", 0)}),
-        new file_init()
+        native_func_register["file.init"]
     );
     file_methods["read"] = new stmt_method("file.read",
         std::vector<token>(),
-        new file_read()
+        native_func_register["file.read"]
     );
     file_methods["write"] = new stmt_method("file.write",
         std::vector<token>({token(token_type::IDENTIFIER, "content", "", 0)}),
-        new file_write()
+        native_func_register["file.write"]
     );
     env::class_define("file", file_methods);
+}
+
+// 注册原生函数和类
+void native::register_native(){
+    native_func_register["clock"] = new func_clock();
+    native_func_register["print"] = new func_print();
+    native_func_register["input"] = new func_input();
+    native_func_register["num"] = new func_num();
+    native_func_register["str"] = new func_str();
+    native_func_register["exit"] = new func_exit();
+    native_func_register["round"] = new func_int();
+    native_func_register["sleep"] = new func_sleep();
+    native_func_register["file.init"] = new file_init();
+    native_func_register["file.read"] = new file_read();
+    native_func_register["file.write"] = new file_write();
 }
