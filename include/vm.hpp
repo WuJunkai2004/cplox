@@ -18,6 +18,7 @@ enum class operation_code{
     POP,             // 弹出栈顶操作    = 弹出栈顶元素
     GET_ITEM,        // 获取元素操作    = 获取常量表，压入栈顶
     SET_ITEM,        // 设置元素操作    = 将栈顶元素加入常量表
+    SET_VARIABLE,    // 设置变量操作    = 设置变量操作
     SET_LOCAL,       // 设置局部变量操作 = 进入新的作用域
     END_LOCAL,       // 结束局部变量操作 = 退出当前作用域
     GET_UPVALUE,     // 获取上值操作
@@ -64,6 +65,7 @@ inline std::map<operation_code, std::string> opcode_map = {
     {operation_code::POP,           "POP"},
     {operation_code::GET_ITEM,      "GET_ITEM"},
     {operation_code::SET_ITEM,      "SET_ITEM"},
+    {operation_code::SET_VARIABLE,  "SET_VARIABLE"},
     {operation_code::SET_LOCAL,     "SET_LOCAL"},
     {operation_code::END_LOCAL,     "END_LOCAL"},
     {operation_code::GET_UPVALUE,   "GET_UPVALUE"},
@@ -110,6 +112,7 @@ inline std::map<std::string, operation_code> opcode_map_reverse = {
     {"POP",           operation_code::POP},
     {"GET_ITEM",      operation_code::GET_ITEM},
     {"SET_ITEM",      operation_code::SET_ITEM},
+    {"SET_VARIABLE",  operation_code::SET_VARIABLE},
     {"SET_LOCAL",     operation_code::SET_LOCAL},
     {"END_LOCAL",     operation_code::END_LOCAL},
     {"GET_UPVALUE",   operation_code::GET_UPVALUE},

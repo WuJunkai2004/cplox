@@ -41,9 +41,13 @@ void vm::run(const std::vector<bcode>& codes){
                 value_stack.push( env::get_arg(codes[index].value) );
                 break;
             case operation_code::SET_ITEM:{
-                std::string name = value_stack.pop().get_literal();
-                env::define(name, value_stack.pop());
+                std::string name = value_stack.pop().get_lexeme();
+                env::assign(name, value_stack.pop());
                 break;
+            }
+            case operation_code::SET_VARIABLE:{
+                std::string name = value_stack.pop().get_lexeme();
+                env::define(name, value_stack.pop());
             }
             case operation_code::SET_LOCAL:
                 env::push();
@@ -66,9 +70,12 @@ void vm::run(const std::vector<bcode>& codes){
             case operation_code::LESS:
                 value_stack.push(value_stack.pop() < value_stack.pop());
                 break;
-            case operation_code::LESS_EQUAL:
-                value_stack.push(value_stack.pop() <= value_stack.pop());
+            case operation_code::LESS_EQUAL:{
+                token f = value_stack.pop();
+                token s = value_stack.pop();
+                value_stack.push(f <= s);
                 break;
+            }
             case operation_code::ADD:
                 value_stack.push(value_stack.pop() + value_stack.pop());
                 break;
@@ -92,7 +99,7 @@ void vm::run(const std::vector<bcode>& codes){
                 break;
             case operation_code::JUMP_IF_F:
                 if(!value_stack.pop()){
-                    index = std::stoi(codes[index].value);
+                    index += std::stoi(codes[index].value);
                 }
                 break;
             case operation_code::JUMP_TO:

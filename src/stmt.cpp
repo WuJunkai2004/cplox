@@ -47,7 +47,7 @@ void stmt_var::accept(){
 int stmt_var::build(){
     int value_line = value->build();
     code::compiler::assemble(operation_code::CONSTANT, name);
-    code::compiler::assemble(operation_code::SET_ITEM);
+    code::compiler::assemble(operation_code::SET_VARIABLE);
     return value_line + 2;
 }
 
@@ -98,7 +98,7 @@ void stmt_if::accept(){
 }
 
 int stmt_if::build(){
-    condition->build();
+    int cond_line = condition->build();
     int then_index = code::compiler::assemble(operation_code::JUMP_IF_F);
     int then_line = then_branch->build();
     int else_index = 0;
@@ -107,10 +107,10 @@ int stmt_if::build(){
     if(else_branch != nullptr){
         else_index = code::compiler::assemble(operation_code::JUMP);
         else_line = else_branch->build();
-        code::compiler::modify(then_index, operation_code::JUMP, std::to_string(else_line));
+        code::compiler::modify(else_index, operation_code::JUMP, std::to_string(else_line));
     }
     code::compiler::modify(then_index, operation_code::JUMP_IF_F, std::to_string(then_line + jump_for_more));
-    return 1 + then_line + jump_for_more + else_line;
+    return cond_line + 1 + then_line + jump_for_more + else_line;
 }
 
 
@@ -167,7 +167,7 @@ int stmt_loop::build(){
     }
     int cond_line = cond->build();
     code::compiler::assemble(operation_code::NEGATE);
-    code::compiler::assemble(operation_code::JUMP_IF_F, std::to_string(body_line + incr_line + cond_line + 2));
+    code::compiler::assemble(operation_code::JUMP_IF_F, std::to_string(-(body_line + incr_line + cond_line + 1)));
     code::compiler::assemble(operation_code::END_LOCAL);
     return 1 + init_line + body_line + incr_line + cond_line + 3;
 }
