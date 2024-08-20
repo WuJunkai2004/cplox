@@ -1,7 +1,9 @@
 #include "file.h"
 
-#include <C_types.h>
+#include <c_types.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 str_view getFileExtension(str path){
     int len = strlen(path);

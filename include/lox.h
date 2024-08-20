@@ -1,7 +1,7 @@
 #ifndef __LOX_H__
 #define __LOX_H__
 
-#include "C_types.h"
+#include "c_types.h"
 
 int LOX_repl_run();
 int LOX_file_run(str);
@@ -17,18 +17,15 @@ enum LOX_ERROR{
     FILE_NOT_FOUND_ERROR
 };
 
-struct{
+struct __LOX__{
     // 函数指针
     int (*repl_run)();
     int (*file_run)(str);
 
-    void (*error)(int, str);
-} lox = {
-    .repl_run = LOX_repl_run,
-    .file_run = LOX_file_run,
-
-    .error = LOX_error
+    void (*error)(int, str, str);
 };
+
+extern struct __LOX__ lox;
 
 
 #endif

@@ -1,9 +1,11 @@
 #include "lox.h"
 
-#include <C_types.h>
+#include <c_types.h>
+#include <stdlib.h>
 
 #include "console.h"
 #include "file.h"
+#include "compiler.h"
 
 int LOX_repl_run(){
     str line = NULL;
@@ -34,8 +36,7 @@ int LOX_file_run(str path){
 
 
 int LOX_run(str source, int line_id){
-    printf("lox: %d: %s\n", line_id, source);
-    return 0;
+    compiler.compile(source);
 }
 
 
@@ -47,3 +48,11 @@ void LOX_error(int error_line, str error_type, str error_message){
         printf("\t[%s]: %s\n", error_type, error_message);
     }
 }
+
+
+struct __LOX__ lox = {
+    .repl_run = LOX_repl_run,
+    .file_run = LOX_file_run,
+
+    .error = LOX_error
+};

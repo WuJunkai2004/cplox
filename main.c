@@ -9,7 +9,7 @@ int main(int argc_len, char* params[]){
         case 2:
             return lox.file_run(params[1]);
         default:
-            printf("cplox [file] [option]")
+            printf("cplox [file] [option]");
             return 0;
     }
 }
