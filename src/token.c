@@ -27,7 +27,7 @@ token token_init(enum token_type type, str_view lexeme, int line) {
 
 
 void token_print(token tok) {
-    printf("%04d ", tok.type);
+    printf("%02d ", tok.type);
     for(int i = 0; i < tok.lexeme.len; i++) {
         printf("%c", tok.lexeme.start[i]);
     }

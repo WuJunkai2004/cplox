@@ -36,9 +36,10 @@ static token scan_string(str source, int* current, char quote, int line) {
     if(source[*current] == '\0' || source[*current] == '\n'){
         return token_make(TOKEN_ERROR, line);
     }
+    *current += 1;
     return token_init(
         TOKEN_STRING,
-        str_cut(source, start+1, *current - start-1),
+        str_cut(source, start, *current - start - 1),
         line
     );
 }
@@ -73,8 +74,8 @@ static bool is_keyword(str source, int current, str out){
 
 
 static token scan_identifier(str source, int* current, int line) {
-    int start = *current;
-    switch(source[*current-1]){
+    int start = *current - 1;
+    switch(source[start]){
         case 'a':
             if(is_keyword(source, *current, "nd")){
                 *current += 2;
@@ -118,6 +119,10 @@ static token scan_identifier(str source, int* current, int line) {
                 *current += 1;
                 return token_make(TOKEN_IF, line);
             }
+            if(is_keyword(source, *current, "mport")){
+                *current += 5;
+                return token_make(TOKEN_IMPORT, line);
+            }
             break;
         case 'n':
             if(is_keyword(source, *current, "il")){
@@ -159,6 +164,12 @@ static token scan_identifier(str source, int* current, int line) {
                 return token_make(TOKEN_WHILE, line);
             }
             break;
+        case 'v':
+            if(is_keyword(source, *current, "ar")){
+                *current += 2;
+                return token_make(TOKEN_VAR, line);
+            }
+            break;
         case 'p':
             if(is_keyword(source, *current, "rint")){
                 *current += 4;
@@ -171,7 +182,7 @@ static token scan_identifier(str source, int* current, int line) {
     }
     return token_init(
         TOKEN_IDENTIFIER,
-        str_cut(source, start-1, *current - start + 1),
+        str_cut(source, start, *current - start),
         line
     );
 }
@@ -238,12 +249,16 @@ static token scan_token(str source, int* current) {
         case '\'':
             return scan_string(source, current, source[cursor], line);
         case '0' ... '9':
+            *current -= 1;
             return scan_number(source, current, line);
         case 'a' ... 'z':
+        case 'A' ... 'Z':
+        case '_':
             return scan_identifier(source, current, line);
         case '\0':
             return token_make(TOKEN_EOF, line);
     }
+    return scan_token(source, current);
 }
 
 

@@ -7,6 +7,7 @@
 void COMPILER_compile(str source) {
     list tokens = scanner.scan(source);
     scanner.print(tokens);
+    list_free(&tokens);
 }
 
 struct __COMPILER__ compiler = {

@@ -27,6 +27,8 @@ enum token_type{
     TOKEN_BREAK,
     TOKEN_FUNC, TOKEN_RETURN,
     TOKEN_CLASS, TOKEN_THIS, TOKEN_SUPER,
+    TOKEN_VAR,
+    TOKEN_IMPORT,
 
     // error
     TOKEN_ERROR,
