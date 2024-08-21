@@ -6,18 +6,17 @@
 #include "console.h"
 #include "file.h"
 #include "compiler.h"
+#include "vm.h"
 
 int LOX_repl_run(){
     str line = NULL;
-    int line_id = 0;
     while(1){
         printf("lox> ");
         line = getConsoleInput();
-        line_id++;
         if(line[0] == 0){
             break;
         }
-        LOX_run(line, line_id);
+        compiler.compile(line);
     }
     return 0;
 }
@@ -29,14 +28,24 @@ int LOX_file_run(str path){
         lox.error(-1, "FileNotFoundError", "file not found");
         return FILE_NOT_FOUND_ERROR;
     }
-    int status = LOX_run(content, 0);
+    list product = compiler.compile(content);
     free(content);
-    return status;
+
+    int exit_code = vm.run(product._data, product.length);
+    return 0;
 }
 
 
-int LOX_run(str source, int line_id){
-    compiler.compile(source);
+int LOX_byte_run(str path){
+    str content = getFileBinary(path);
+    size_t limit = getFileSize(path, "rb");
+    if(content == NULL){
+        lox.error(-1, "FileNotFoundError", "file not found");
+        return FILE_NOT_FOUND_ERROR;
+    }
+    int status = vm.run(content, limit);
+    free(content);
+    return status;
 }
 
 
@@ -53,6 +62,7 @@ void LOX_error(int error_line, str error_type, str error_message){
 struct __LOX__ lox = {
     .repl_run = LOX_repl_run,
     .file_run = LOX_file_run,
+    .byte_run = LOX_byte_run,
 
     .error = LOX_error
 };

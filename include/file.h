@@ -8,8 +8,9 @@
 str_view getFileExtension(str);
 
 str      getFileContent(str);
+str      getFileBinary(str);
 
-size_t   getFileSize(str);
+size_t   getFileSize(str, str);
 
 
 #endif

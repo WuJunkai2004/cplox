@@ -20,7 +20,7 @@ str_view getFileExtension(str path){
 
 
 str getFileContent(str path){
-    size_t size = getFileSize(path);
+    size_t size = getFileSize(path, "r");
     str buffer = str_new(size);
     FILE* file = fopen(path, "r");
     if(file == NULL){
@@ -32,8 +32,21 @@ str getFileContent(str path){
 }
 
 
-size_t getFileSize(str path){
-    FILE* file = fopen(path, "r");
+str getFileBinary(str path){
+    size_t size = getFileSize(path, "rb");
+    str buffer = str_new(size);
+    FILE* file = fopen(path, "rb");
+    if(file == NULL){
+        return NULL;
+    }
+    fread(buffer, 1, size, file);
+    fclose(file);
+    return buffer;
+}
+
+
+size_t getFileSize(str path, str fmode){
+    FILE* file = fopen(path, fmode);
     if(file == NULL){
         return 0;
     }
