@@ -16,7 +16,7 @@ struct __MODE__ mode = {
 };
 
 void option_parse(int argv_len, str argv[]){
-    if(argv_len < 1){
+    if(argv_len <= 1){
         mode.repl = true;
         return;
     }

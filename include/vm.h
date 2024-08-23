@@ -3,7 +3,9 @@
 
 #include <c_types.h>
 
-typedef void* chuck;
+typedef uint8* chuck;
+
+void VM_init();
 
 int VM_run(chuck, uint32);
 
@@ -12,12 +14,17 @@ enum operate_code{
     OP_PRINT,
     OP_RETURN,
     OP_CONSTANT,        // 2 for constant, 1 for index in the list of data, 2
+    OP_ADD,
+    OP_SUB,
+    OP_MUL,
+    OP_DIV
 };
 
 
 
 
 struct __VM__{
+    void (*init)();
     int (*run)(chuck, uint32);
 };
 

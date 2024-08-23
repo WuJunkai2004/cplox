@@ -16,7 +16,8 @@ int LOX_repl_run(){
         if(line[0] == 0){
             break;
         }
-        compiler.compile(line);
+        list bytecode = compiler.compile(line);
+        vm.run(bytecode._data, bytecode.length);
     }
     return 0;
 }

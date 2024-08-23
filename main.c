@@ -4,8 +4,12 @@
 #include "lox.h"
 #include "file.h"
 #include "option.h"
+#include "memory.h"
+#include "vm.h"
 
 int main(int argc_len, char* params[]){
+    memory.init();
+    vm.init();
     option_parse(argc_len, params);
 
     // run the REPL mode from the command line
