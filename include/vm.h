@@ -14,6 +14,7 @@ enum operate_code{
     OP_PRINT,
     OP_RETURN,
     OP_CONSTANT,        // 2 for constant, 1 for index in the list of data, 2
+    OP_SET_VAR,
     OP_ADD,
     OP_SUB,
     OP_MUL,

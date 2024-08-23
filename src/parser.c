@@ -7,6 +7,7 @@
 #include "token.h"
 #include "vm.h"
 #include "memory.h"
+#include "env.h"
 
 struct __PARSER__ parser = {
     .parse = PARSER_parse,
@@ -55,6 +56,32 @@ void EMIT_VALUE(list* bytecode, uint16 pos){
     bytecode->length += 3;
 }
 
+void EMIT_OFFSET(list* bytecode, uint16 offset){
+    if(bytecode->length + 2 > bytecode->_capacity){
+        list_expand(bytecode, bytecode->_capacity + 1024);
+    }
+    *(uint16*)(bytecode->_data + bytecode->length) = offset;
+    bytecode->length += 2;
+}
+
+void EMIT_CONST(list* bytecode, uint16 pos){
+    if(bytecode->length + 3 > bytecode->_capacity){
+        list_expand(bytecode, bytecode->_capacity + 1024);
+    }
+    *(uint8*)(bytecode->_data + bytecode->length) = STATIC_MEMORY;
+    *(uint16*)(bytecode->_data + bytecode->length + 1) = pos;
+    bytecode->length += 3;
+}
+
+
+void CONSUME(list* bytecode, int* idx, enum token_type type, str msg){
+    if(list_get(token, bytecode, *idx).type != type){
+        printf("Error: %s\n", msg);
+        exit(1);
+    }
+    *idx += 1;
+}
+
 
 static int precedence[32] = {
     [TOKEN_LEFT_PAREN] = 0,
@@ -84,13 +111,16 @@ static int precedence[32] = {
 
 static void parse_expr(list* bytecode, list* tokens, int* idx){
     stack sign_stack = stack_create(token);
-    while(list_get(token, tokens, *idx).type != TOKEN_EOF){
+    while(list_get(token, tokens, *idx).type != TOKEN_SEMICOLON && list_get(token, tokens, *idx).type != TOKEN_COMMA){
         switch(list_get(token, tokens, *idx).type){
-            case TOKEN_LEFT_PAREN:{
-                *idx += 1;
-                parse_expr(bytecode, tokens, idx);
+            case TOKEN_LEFT_PAREN:
+                if(list_get(token, tokens, *idx - 1).type == TOKEN_IDENTIFIER){
+                    /** @todo */
+                } else {
+                    *idx += 1;
+                    parse_expr(bytecode, tokens, idx);
+                }
                 break;
-            }
             case TOKEN_RIGHT_PAREN:
                 while(!stack_is_empty(&sign_stack)){
                     EMIT_SIGN(bytecode, stack_pop(token, &sign_stack).type);
@@ -118,8 +148,34 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
                 EMIT_VALUE(bytecode, memory.save_string(brace_deepth, view_to_str(list_get(token, tokens, *idx).lexeme)));
                 *idx += 1;
                 break;
-            default:
+            case TOKEN_IDENTIFIER:
+                /** @todo */
                 break;
+            case TOKEN_NIL:
+                EMIT_OPCODE(bytecode, OP_CONSTANT);
+                EMIT_CONST(bytecode, 0);
+                *idx += 1;
+                break;
+            case TOKEN_FALSE:
+                EMIT_OPCODE(bytecode, OP_CONSTANT);
+                EMIT_CONST(bytecode, 1);
+                *idx += 1;
+                break;
+            case TOKEN_TRUE:
+                EMIT_OPCODE(bytecode, OP_CONSTANT);
+                EMIT_CONST(bytecode, 2);
+                *idx += 1;
+                break;
+            case TOKEN_EQUAL:{
+                token identy = list_get(token, tokens, *idx - 1);
+                /** @todo */
+            }
+            default:
+                printf("Error: Unexpected token\n");
+                printf("%d\n", *idx);
+                printf("token type: %d\n", list_get(token, tokens, *idx).type);
+                printf("is equal semicolon %d\n", list_get(token, tokens, *idx).type == TOKEN_SEMICOLON);
+                return;
         }
     }
     while(!stack_is_empty(&sign_stack)){
@@ -139,14 +195,42 @@ list PARSER_parse(list tokens){
     for(int idx = 0; idx < tokens.length; idx++){
         token local = list_get(token, &tokens, idx);
         switch(local.type){
-            case TOKEN_VAR:
+            case TOKEN_VAR:{
+                idx += 1;
+                int set_pos = env.set_var(list_get(token, &tokens, idx).lexeme, STATIC_MEMORY, 0);
+                idx += 1;
+                if(list_get(token, &tokens, idx).type == TOKEN_EQUAL){
+                    idx += 1;
+                    parse_expr(&parser.products, &tokens, &idx);
+                    EMIT_OPCODE(&parser.products, OP_SET_VAR);
+                    EMIT_OFFSET(&parser.products, set_pos);
+                } else {
+                    EMIT_OPCODE(&parser.products, OP_CONSTANT);
+                    EMIT_CONST(&parser.products, 0);
+                    EMIT_OPCODE(&parser.products, OP_SET_VAR);
+                    EMIT_OFFSET(&parser.products, set_pos);
+                }
+                CONSUME(&tokens, &idx, TOKEN_SEMICOLON, "Expect ; after var declaration");
                 break;
+            }
             case TOKEN_FUNC:
                 break;
             case TOKEN_IF:
                 break;
+            case TOKEN_FOR:
+                break;
+            case TOKEN_WHILE:
+                break;
+            case TOKEN_RETURN:
+                break;
+            case TOKEN_BREAK:
+                break;
+            case TOKEN_IMPORT:
+                break;
             default:
                 parse_expr(&parser.products, &tokens, &idx);
+                CONSUME(&tokens, &idx, TOKEN_SEMICOLON, "Expect ; after expression");
+                break;
         }
     }
     return parser.products;

@@ -13,13 +13,14 @@ int MEMORY_save_number(int deepth, double value);
 int MEMORY_save_string(int deepth, str   value);
 
 void* MEMORY_get(int deepth, int index);
+#define LOCALIZE(v) ({var _v = v; MEMORY_get(_v.deepth, _v.offset);})
 
-#define CONST_NIL   (MEMORY_get(STATIC_MEMORY, 0))
-#define CONST_FALSE (MEMORY_get(STATIC_MEMORY, 1))
-#define CONST_TRUE  (MEMORY_get(STATIC_MEMORY, 2))
+#define CONST_NIL   VAR(STATIC_MEMORY, 0)
+#define CONST_FALSE VAR(STATIC_MEMORY, 1)
+#define CONST_TRUE  VAR(STATIC_MEMORY, 2)
 
-#define SAVED_NUMBER(deepth, value) (MEMORY_get(deepth, MEMORY_save_number(deepth, value)))
-#define SAVED_STRING(deepth, value) (MEMORY_get(deepth, MEMORY_save_string(deepth, value)))
+#define SAVED_NUMBER(deepth, value) (VAR(deepth, MEMORY_save_number(deepth, value)))
+#define SAVED_STRING(deepth, value) (VAR(deepth, MEMORY_save_string(deepth, value)))
 
 
 #define GET_TYPE(ptr)   (*((uint8*)ptr) & 0b00011110)

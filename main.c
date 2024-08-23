@@ -6,10 +6,16 @@
 #include "option.h"
 #include "memory.h"
 #include "vm.h"
+#include "env.h"
 
-int main(int argc_len, char* params[]){
+void init(){
     memory.init();
     vm.init();
+    env.init();
+}
+
+int main(int argc_len, char* params[]){
+    init();
     option_parse(argc_len, params);
 
     // run the REPL mode from the command line

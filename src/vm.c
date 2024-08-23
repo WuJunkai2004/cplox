@@ -6,11 +6,13 @@
 #include <string.h>
 
 #include "memory.h"
+#include "var.h"
+#include "env.h"
 
 stack value_stack;
 
 void VM_init(){
-    value_stack = stack_create(void*);
+    value_stack = stack_create(var);
 }
 
 int VM_run(chuck bytecode, uint32 length){
@@ -22,13 +24,13 @@ int VM_run(chuck bytecode, uint32 length){
                 uint8 deepth = bytecode[ip];
                 ip+=1;
                 uint16 pos = *(uint16*)(bytecode + ip);
-                stack_push(&value_stack, memory.get(deepth, pos));
+                stack_push(&value_stack, VAR(deepth, pos));
                 ip+=2;
                 break;
             }
             case OP_ADD:{
-                void* b = stack_pop(void*, &value_stack);
-                void* a = stack_pop(void*, &value_stack);
+                void* b = LOCALIZE(stack_pop(var, &value_stack));
+                void* a = LOCALIZE(stack_pop(var, &value_stack));
                 if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
                     double result = AS_NUMBER(a) + AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
@@ -47,8 +49,8 @@ int VM_run(chuck bytecode, uint32 length){
                 break;
             }
             case OP_SUB:{
-                void* b = stack_pop(void*, &value_stack);
-                void* a = stack_pop(void*, &value_stack);
+                void* b = LOCALIZE(stack_pop(var, &value_stack));
+                void* a = LOCALIZE(stack_pop(var, &value_stack));
                 if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
                     double result = AS_NUMBER(a) - AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
@@ -60,8 +62,8 @@ int VM_run(chuck bytecode, uint32 length){
                 break;
             }
             case OP_MUL:{
-                void* b = stack_pop(void*, &value_stack);
-                void* a = stack_pop(void*, &value_stack);
+                void* b = LOCALIZE(stack_pop(var, &value_stack));
+                void* a = LOCALIZE(stack_pop(var, &value_stack));
                 if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
                     double result = AS_NUMBER(a) * AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
@@ -73,8 +75,8 @@ int VM_run(chuck bytecode, uint32 length){
                 break;
             }
             case OP_DIV:{
-                void* b = stack_pop(void*, &value_stack);
-                void* a = stack_pop(void*, &value_stack);
+                void* b = LOCALIZE(stack_pop(var, &value_stack));
+                void* a = LOCALIZE(stack_pop(var, &value_stack));
                 if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
                     double result = AS_NUMBER(a) / AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
@@ -85,9 +87,25 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 1;
                 break;
             }
+            case OP_SET_VAR:{
+                ip += 1;
+                uint16 pos = *(uint16*)(bytecode + ip);
+                hash_var* iter = list_get_ptr(&var_map, pos);
+                printf("Set var: %.*s\n", iter->name.len, iter->name.start);
+                var value = stack_pop(var, &value_stack);
+                printf("Value: %s\n", VAL_FORMAT(LOCALIZE(value)));
+                iter->data.deepth = value.deepth;
+                iter->data.offset = value.offset;
+                ip += 2;
+                break;
+            }
         }
     }
-    printf("Result: %s\n", VAL_FORMAT(stack_pop(void*, &value_stack)));
+    if(stack_is_empty(&value_stack)){
+        printf("Result: nil\n");
+        return 0;
+    }
+    printf("Result: %s\n", VAL_FORMAT(LOCALIZE(stack_pop(var, &value_stack))));
 }
 
 

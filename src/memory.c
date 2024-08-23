@@ -75,9 +75,9 @@ str VAL_FORMAT(void* ptr){
     static str format_false = "false";
     static str format_true = "true";
     switch(GET_TYPE(ptr)){
-        case VAL_NIL: return format_nil;
-        case VAL_FALSE: return format_false;
-        case VAL_TRUE: return format_true;
+        case VAL_NIL:    return format_nil;
+        case VAL_FALSE:  return format_false;
+        case VAL_TRUE:   return format_true;
         case VAL_NUMBER: return string(AS_NUMBER(ptr));
         case VAL_STRING: return AS_STRING(ptr);
         default: return "unknown";
