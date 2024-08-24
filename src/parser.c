@@ -8,6 +8,7 @@
 #include "vm.h"
 #include "memory.h"
 #include "env.h"
+#include "error.h"
 
 struct __PARSER__ parser = {
     .parse = PARSER_parse,
@@ -85,8 +86,7 @@ void EMIT_CONST(list* bytecode, uint16 pos){
 
 void CONSUME(list* bytecode, int* idx, enum token_type type, str msg){
     if(list_get(token, bytecode, *idx).type != type){
-        printf("Error: %s\n", msg);
-        exit(1);
+        throw(SYNTAX_ERROR, msg);
     }
     *idx += 1;
 }

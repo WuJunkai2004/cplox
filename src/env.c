@@ -3,6 +3,8 @@
 #include <c_types.h>
 #include <stdio.h>
 
+#include "error.h"
+
 list   sym_map; // 符号表
 list   var_map; // 变量表
 uint32 var_idx;
@@ -54,7 +56,7 @@ int ENV_get_var(str_view name){
             return i;
         }
     }
-    // error: variable not found
+    throw(NAME_ERROR, "name '%.*s' is not defined", name.len, name.start);
     return -1;
 }
 

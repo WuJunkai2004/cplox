@@ -7,6 +7,7 @@
 
 #include "memory.h"
 #include "env.h"
+#include "error.h"
 
 stack value_stack;
 
@@ -41,8 +42,7 @@ int VM_run(chuck bytecode, uint32 length){
                     sprintf(result, "%s%s\0", a_str, b_str);
                     stack_push(&value_stack, SAVED_STRING(RUNTIME_MEMORY, result));
                 } else {
-                    stack_push(&value_stack, CONST_NIL);
-                    printf("Error: cannot add");
+                    throw(TYPE_ERROR, "cannot add '%s' and '%s'", VAL_FORMAT(a), VAL_FORMAT(b));
                 }
                 ip += 1;
                 break;
@@ -54,8 +54,7 @@ int VM_run(chuck bytecode, uint32 length){
                     double result = AS_NUMBER(a) - AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
                 } else {
-                    stack_push(&value_stack, CONST_NIL);
-                    printf("Error: cannot sub");
+                    throw(TYPE_ERROR, "cannot sub '%s' and '%s'", VAL_FORMAT(a), VAL_FORMAT(b));
                 }
                 ip += 1;
                 break;
@@ -67,8 +66,7 @@ int VM_run(chuck bytecode, uint32 length){
                     double result = AS_NUMBER(a) * AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
                 } else {
-                    stack_push(&value_stack, CONST_NIL);
-                    printf("Error: cannot mul");
+                    throw(TYPE_ERROR, "cannot mul '%s' and '%s'", VAL_FORMAT(a), VAL_FORMAT(b));
                 }
                 ip += 1;
                 break;
@@ -77,11 +75,13 @@ int VM_run(chuck bytecode, uint32 length){
                 void* b = LOCALIZE(stack_pop(var, &value_stack));
                 void* a = LOCALIZE(stack_pop(var, &value_stack));
                 if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
+                    if(AS_NUMBER(b) == 0){
+                        throw(ZERO_DIVISION_ERROR, "division by zero");
+                    }
                     double result = AS_NUMBER(a) / AS_NUMBER(b);
                     stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, result));
                 } else {
-                    stack_push(&value_stack, CONST_NIL);
-                    printf("Error: cannot div");
+                    throw(TYPE_ERROR, "cannot div '%s' and '%s'", VAL_FORMAT(a), VAL_FORMAT(b));
                 }
                 ip += 1;
                 break;
@@ -100,8 +100,8 @@ int VM_run(chuck bytecode, uint32 length){
                         stack_push(&value_stack, CONST_TRUE);
                         break;
                     default:
-                        stack_push(&value_stack, CONST_NIL);
-                        printf("Error: cannot negate");
+                        throw(TYPE_ERROR, "cannot negate '%s'", VAL_FORMAT(a));
+                        break;
                 }
                 ip += 1;
                 break;
