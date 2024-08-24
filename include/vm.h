@@ -14,8 +14,7 @@ enum operate_code{
     OP_PRINT,
     OP_RETURN,
     OP_CONSTANT,        // 2 for constant, 1 for index in the list of data, 2
-    OP_SET_VAR,         // 定义变量
-    OP_SET_ITEM,        // 赋值变量
+    OP_SET_ITEM,        // 赋值变量(扫描到的时候就马上定义)
     OP_GET_ITEM,        // 获取变量
     OP_ADD,
     OP_SUB,

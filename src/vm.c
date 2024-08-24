@@ -106,28 +106,18 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 1;
                 break;
             }
-            case OP_SET_VAR:{
+            case OP_SET_ITEM:{
                 ip += 1;
                 uint16 pos = *(uint16*)(bytecode + ip);
                 var* iter     = list_get_ptr(&var_map, pos);
                 str_view name = list_get(str_view, &sym_map, pos);
                 printf("Set var: %.*s\n", name.len, name.start);
-                var value = stack_pop(var, &value_stack);
+                var value = stack_top(var, &value_stack);
                 printf("Value: %s\n", VAL_FORMAT(LOCALIZE(value)));
                 iter->deepth = value.deepth;
                 iter->offset = value.offset;
                 ip += 2;
                 break;
-            }
-            case OP_SET_ITEM:{
-                /*ip += 1;
-                uint16 pos = *(uint16*)(bytecode + ip);
-                hash_var* iter = list_get_ptr(&var_map, pos);
-                var value = stack_pop(var, &value_stack);
-                iter->data.deepth = value.deepth;
-                iter->data.offset = value.offset;
-                ip += 2;
-                break;*/
             }
             case OP_GET_ITEM:{
                 ip += 1;
@@ -144,6 +134,9 @@ int VM_run(chuck bytecode, uint32 length){
         return 0;
     }
     printf("Result: %s\n", VAL_FORMAT(LOCALIZE(stack_pop(var, &value_stack))));
+    while(!stack_is_empty(&value_stack)){
+        stack_pop(var, &value_stack);
+    }
 }
 
 

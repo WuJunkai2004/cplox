@@ -192,8 +192,16 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
                 break;
             case TOKEN_EQUAL:{
                 token identy = list_get(token, tokens, *idx - 1);
-                /** @todo */
+                *idx += 1;
+                parse_expr(bytecode, tokens, idx);
+                EMIT_OPCODE(bytecode, OP_SET_ITEM);
+                EMIT_OFFSET(bytecode, env.get_var(identy.lexeme));
+                break;
             }
+            case TOKEN_BANG:
+                is_negate = !is_negate;
+                *idx += 1;
+                continue;
             default:
                 printf("Error: Unexpected token\n");
                 printf("%d\n", *idx);
@@ -230,12 +238,12 @@ list PARSER_parse(list tokens){
                 if(list_get(token, &tokens, idx).type == TOKEN_EQUAL){
                     idx += 1;
                     parse_expr(&parser.products, &tokens, &idx);
-                    EMIT_OPCODE(&parser.products, OP_SET_VAR);
+                    EMIT_OPCODE(&parser.products, OP_SET_ITEM);
                     EMIT_OFFSET(&parser.products, set_pos);
                 } else {
                     EMIT_OPCODE(&parser.products, OP_CONSTANT);
                     EMIT_CONST(&parser.products, 0);
-                    EMIT_OPCODE(&parser.products, OP_SET_VAR);
+                    EMIT_OPCODE(&parser.products, OP_SET_ITEM);
                     EMIT_OFFSET(&parser.products, set_pos);
                 }
                 CONSUME(&tokens, &idx, TOKEN_SEMICOLON, "Expect ; after var declaration");
