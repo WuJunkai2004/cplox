@@ -3,14 +3,26 @@
 #include <c_types.h>
 #include <stdio.h>
 
-#include "var.h"
-
-list   var_map;
+list   sym_map; // 符号表
+list   var_map; // 变量表
 uint32 var_idx;
 stack  section_stack;
 
 void ENV_init(){
-    var_map = list_create(hash_var);
+    var_map = list_create(var);
+    list_expand(&var_map, 1024*4);
+    var null_var = VAR(1, 0);
+    for(int i = 0; i < 1024*4; i++){
+        list_append(&var_map, null_var);
+    }
+
+    sym_map = list_create(str_view);
+    list_expand(&sym_map, 1024*4);
+    str_view null_str = {NULL, 0};
+    for(int i = 0; i < 1024*4; i++){
+        list_append(&sym_map, null_str);
+    }
+
     var_idx = 0;
 
     section_stack = stack_create(uint32);
@@ -28,37 +40,30 @@ void ENV_pop(){
 }
 
 
-int ENV_set_var(str_view name, uint16 deepth, uint32 offset){
-    hash_var v = {
-        .name = name,
-        .data = VAR(deepth, offset)
-    };
-    if(var_map.length > var_idx){
-        list_set(&var_map, var_idx, v);
-    } else {
-        list_append(&var_map, v);
-    }
+int ENV_set_var(str_view name){
+    list_set(&sym_map, var_idx, name);
     var_idx++;
     return var_idx - 1;
 }
 
 
-var ENV_get_var(str_view name){
-    for(uint32 i = var_idx - 1; i > 0; i--){
-        hash_var v = list_get(hash_var, &var_map, i - 1);
-        if(compare_str_view(v.name, name) == 0){
-            return v.data;
+int ENV_get_var(str_view name){
+    for(int i = var_idx - 1; i >= 0; i--){
+        str_view get_name = list_get(str_view, &sym_map, i);
+        if(compare_str_view(get_name, name) == 0){
+            return i;
         }
     }
-    return VAR(0, 0);
+    // error: variable not found
+    return -1;
 }
 
 
 bool ENV_has_var(str_view name){
     uint32 local_start = stack_top(uint32, &section_stack);
     for(uint32 i = var_idx; i >= local_start; i--){
-        hash_var v = list_get(hash_var, &var_map, i);
-        if(compare_str_view(v.name, name) == 0){
+        str_view get_name = list_get(str_view, &sym_map, i);
+        if(compare_str_view(get_name, name) == 0){
             return true;
         }
     }

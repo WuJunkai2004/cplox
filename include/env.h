@@ -3,8 +3,14 @@
 
 #include <c_types.h>
 
-#include "var.h"
+typedef struct{
+    uint16 deepth;
+    uint32 offset;
+} var;
 
+#define VAR(d, o) ((var){.deepth = d, .offset = o})
+
+extern list   sym_map;
 extern list   var_map;
 extern uint32 var_idx;
 extern stack  section_stack;
@@ -14,9 +20,11 @@ void ENV_init();
 void ENV_push();
 void ENV_pop();
 
-int  ENV_set_var(str_view name, uint16 deepth, uint32 offset);
-var  ENV_get_var(str_view name);
+int  ENV_set_var(str_view name);
+int  ENV_get_var(str_view name);
 bool ENV_has_var(str_view name);
+
+#define FIND_VAR(name) ({int v_id = ENV_get_var(name); list_get(var, &var_map, v_id);})
 
 struct __ENV__{
     void (*init)();
@@ -24,8 +32,8 @@ struct __ENV__{
     void (*push)();
     void (*pop)();
 
-    int  (*set_var)(str_view, uint16, uint32);
-    var  (*get_var)(str_view);
+    int  (*set_var)(str_view);
+    int  (*get_var)(str_view);
     bool (*has_var)(str_view);
 };
 extern struct __ENV__ env;

@@ -64,6 +64,15 @@ void EMIT_OFFSET(list* bytecode, uint16 offset){
     bytecode->length += 2;
 }
 
+void EMIT_PTR(list* bytecode, uint16 deepth, uint32 pos){
+    if(bytecode->length + 6 > bytecode->_capacity){
+        list_expand(bytecode, bytecode->_capacity + 1024);
+    }
+    *(uint16*)(bytecode->_data + bytecode->length) = deepth;
+    *(uint32*)(bytecode->_data + bytecode->length + 2) = pos;
+    bytecode->length += 6;
+}
+
 void EMIT_CONST(list* bytecode, uint16 pos){
     if(bytecode->length + 3 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
@@ -162,7 +171,9 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
                 *idx += 1;
                 break;
             case TOKEN_IDENTIFIER:
-                /** @todo */
+                EMIT_OPCODE(bytecode, OP_GET_ITEM);
+                EMIT_OFFSET(bytecode, env.get_var(list_get(token, tokens, *idx).lexeme));
+                *idx += 1;
                 break;
             case TOKEN_NIL:
                 EMIT_OPCODE(bytecode, OP_CONSTANT);
@@ -214,7 +225,7 @@ list PARSER_parse(list tokens){
         switch(local.type){
             case TOKEN_VAR:{
                 idx += 1;
-                int set_pos = env.set_var(list_get(token, &tokens, idx).lexeme, STATIC_MEMORY, 0);
+                int set_pos = env.set_var(list_get(token, &tokens, idx).lexeme);
                 idx += 1;
                 if(list_get(token, &tokens, idx).type == TOKEN_EQUAL){
                     idx += 1;

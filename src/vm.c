@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "memory.h"
-#include "var.h"
 #include "env.h"
 
 stack value_stack;
@@ -110,12 +109,31 @@ int VM_run(chuck bytecode, uint32 length){
             case OP_SET_VAR:{
                 ip += 1;
                 uint16 pos = *(uint16*)(bytecode + ip);
-                hash_var* iter = list_get_ptr(&var_map, pos);
-                printf("Set var: %.*s\n", iter->name.len, iter->name.start);
+                var* iter     = list_get_ptr(&var_map, pos);
+                str_view name = list_get(str_view, &sym_map, pos);
+                printf("Set var: %.*s\n", name.len, name.start);
                 var value = stack_pop(var, &value_stack);
                 printf("Value: %s\n", VAL_FORMAT(LOCALIZE(value)));
+                iter->deepth = value.deepth;
+                iter->offset = value.offset;
+                ip += 2;
+                break;
+            }
+            case OP_SET_ITEM:{
+                /*ip += 1;
+                uint16 pos = *(uint16*)(bytecode + ip);
+                hash_var* iter = list_get_ptr(&var_map, pos);
+                var value = stack_pop(var, &value_stack);
                 iter->data.deepth = value.deepth;
                 iter->data.offset = value.offset;
+                ip += 2;
+                break;*/
+            }
+            case OP_GET_ITEM:{
+                ip += 1;
+                uint16 pos = *(uint16*)(bytecode + ip);
+                var iter = list_get(var, &var_map, pos);
+                stack_push(&value_stack, iter);
                 ip += 2;
                 break;
             }
