@@ -3,6 +3,8 @@
 
 #include <c_types.h>
 
+#define MAX_INPUT_BUFFER (256*256)
+
 char getEscapedChar(char);
 
 str  getConsoleInput();
