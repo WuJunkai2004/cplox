@@ -87,6 +87,26 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 1;
                 break;
             }
+            case OP_NEGATE:{
+                void* a = LOCALIZE(stack_pop(var, &value_stack));
+                switch(GET_TYPE(a)){
+                    case VAL_NUMBER:
+                        stack_push(&value_stack, SAVED_NUMBER(RUNTIME_MEMORY, -AS_NUMBER(a)));
+                        break;
+                    case VAL_TRUE:
+                        stack_push(&value_stack, CONST_FALSE);
+                        break;
+                    case VAL_FALSE:
+                    case VAL_NIL:
+                        stack_push(&value_stack, CONST_TRUE);
+                        break;
+                    default:
+                        stack_push(&value_stack, CONST_NIL);
+                        printf("Error: cannot negate");
+                }
+                ip += 1;
+                break;
+            }
             case OP_SET_VAR:{
                 ip += 1;
                 uint16 pos = *(uint16*)(bytecode + ip);

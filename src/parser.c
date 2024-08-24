@@ -111,6 +111,7 @@ static int precedence[32] = {
 
 static void parse_expr(list* bytecode, list* tokens, int* idx){
     stack sign_stack = stack_create(token);
+    bool is_negate = false;
     while(list_get(token, tokens, *idx).type != TOKEN_SEMICOLON && list_get(token, tokens, *idx).type != TOKEN_COMMA){
         switch(list_get(token, tokens, *idx).type){
             case TOKEN_LEFT_PAREN:
@@ -128,8 +129,20 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
                 *idx += 1;
                 stack_free(&sign_stack);
                 return;
-            case TOKEN_PLUS:
             case TOKEN_MINUS:
+                // 先处理负号，减号 fall through
+                if(*idx == 0 || (list_get(token, tokens, *idx - 1).type != TOKEN_NUMBER &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_RIGHT_PAREN &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_IDENTIFIER &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_STRING &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_NIL &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_FALSE &&
+                                 list_get(token, tokens, *idx - 1).type != TOKEN_TRUE)){
+                    *idx += 1;
+                    is_negate = !is_negate;
+                    continue;
+                }
+            case TOKEN_PLUS:
             case TOKEN_STAR:
             case TOKEN_SLASH:
                 while(!stack_is_empty(&sign_stack) && precedence[stack_top(token, &sign_stack).type] >= precedence[list_get(token, tokens, *idx).type]){
@@ -176,6 +189,10 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
                 printf("token type: %d\n", list_get(token, tokens, *idx).type);
                 printf("is equal semicolon %d\n", list_get(token, tokens, *idx).type == TOKEN_SEMICOLON);
                 return;
+        }
+        if(is_negate){
+            EMIT_OPCODE(bytecode, OP_NEGATE);
+            is_negate = false;
         }
     }
     while(!stack_is_empty(&sign_stack)){
