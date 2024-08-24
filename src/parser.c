@@ -228,7 +228,7 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
 */
 list PARSER_parse(list tokens){
     parser.products = list_create(uint8);
-    for(int idx = 0; idx < tokens.length; idx++){
+    for(int idx = 0; idx < tokens.length;){
         token local = list_get(token, &tokens, idx);
         switch(local.type){
             case TOKEN_VAR:{
@@ -262,6 +262,9 @@ list PARSER_parse(list tokens){
             case TOKEN_BREAK:
                 break;
             case TOKEN_IMPORT:
+                break;
+            case TOKEN_EOF:
+                idx += 1;
                 break;
             default:
                 parse_expr(&parser.products, &tokens, &idx);
