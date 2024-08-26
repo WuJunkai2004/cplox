@@ -17,11 +17,6 @@ struct __LOX__{
      * @brief Run the file mode
      */
     int (*file_run)(str);
-
-    /**
-     * @brief Run the bytecode
-     */
-    int (*byte_run)(str);
 };
 
 extern struct __LOX__ lox;

@@ -9,7 +9,6 @@ struct __MODE__ {
     bool debug;         // -d --debug
     bool release;       // -r --release
     str  input;         // -i --input
-    str  output;        // -o --output
 
     bool help;          // -h --help
     bool version;       // -v --version

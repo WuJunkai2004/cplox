@@ -23,19 +23,5 @@ list COMPILER_compile(str source) {
     list bytecode = parser.parse(tokens);
     list_free(&tokens);
 
-    if(mode.release && mode.output){
-        FILE* fout = fopen(mode.output, "wb");
-        if(!fout){
-            throw(IO_ERROR, "cannot open file %s", mode.output);
-        }
-        fwrite(bytecode._data, sizeof(uint8), bytecode.length, fout);
-        fclose(fout);
-    }
-
     return bytecode;
 }
-
-
-
-
-

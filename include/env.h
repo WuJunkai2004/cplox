@@ -10,6 +10,9 @@ typedef struct{
 
 #define VAR(d, o) ((var){.deepth = d, .offset = o})
 
+extern list   global_sym_map;
+extern list   global_var_map;
+
 extern list   sym_map;
 extern list   var_map;
 extern uint32 var_idx;

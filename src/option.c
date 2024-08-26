@@ -8,7 +8,6 @@ struct __MODE__ mode = {
     .debug = false,
     .release = false,
     .input = NULL,
-    .output = NULL,
     .help = false,
     .version = false,
     .print_token = false,
@@ -29,10 +28,6 @@ void option_parse(int argv_len, str argv[]){
                 mode.debug = true;
             }else if(strcmp(argv[i], "-r") == 0 || strcmp(argv[i], "--release") == 0){
                 mode.release = true;
-            }else if(strcmp(argv[i], "-i") == 0 || strcmp(argv[i], "--input") == 0){
-                mode.input = argv[++i];
-            }else if(strcmp(argv[i], "-o") == 0 || strcmp(argv[i], "--output") == 0){
-                mode.output = argv[++i];
             }else if(strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0){
                 mode.help = true;
             }else if(strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0){

@@ -37,20 +37,7 @@ int LOX_file_run(str path){
 }
 
 
-int LOX_byte_run(str path){
-    str content = getFileBinary(path);
-    size_t limit = getFileSize(path, "rb");
-    if(content == NULL){
-        throw(FILE_NOT_FOUND_ERROR, "file %s not found", path);
-    }
-    int status = vm.run(content, limit);
-    free(content);
-    return status;
-}
-
-
 struct __LOX__ lox = {
     .repl_run = LOX_repl_run,
     .file_run = LOX_file_run,
-    .byte_run = LOX_byte_run,
 };

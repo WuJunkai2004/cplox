@@ -8,7 +8,6 @@ list PARSER_parse(list);
 
 struct __PARSER__{
     list (*parse)(list);
-    list products;
 };
 
 extern struct __PARSER__ parser;

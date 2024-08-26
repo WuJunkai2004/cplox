@@ -106,7 +106,7 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 1;
                 break;
             }
-            case OP_SET_ITEM:{
+            case OP_SET_GLOBAL:{
                 ip += 1;
                 uint16 pos = *(uint16*)(bytecode + ip);
                 var* iter     = list_get_ptr(&var_map, pos);
@@ -119,7 +119,7 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 2;
                 break;
             }
-            case OP_GET_ITEM:{
+            case OP_GET_GLOBAL:{
                 ip += 1;
                 uint16 pos = *(uint16*)(bytecode + ip);
                 var iter = list_get(var, &var_map, pos);
@@ -127,6 +127,10 @@ int VM_run(chuck bytecode, uint32 length){
                 ip += 2;
                 break;
             }
+            case OP_END_STMT:
+                stack_clear(&value_stack);
+                ip += 1;
+                break;
         }
     }
     if(stack_is_empty(&value_stack)){
