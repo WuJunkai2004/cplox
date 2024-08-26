@@ -61,5 +61,14 @@ int muls(int, int);
 int divs(int, int);
 int negates(int);
 
+string FORMAT(int);
+
+
+// ***
+// *** Native functions
+// ***
+
+int print(int);
+
 
 #endif

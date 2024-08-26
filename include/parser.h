@@ -3,11 +3,13 @@
 
 #include <c_types.h>
 
-list PARSER_parse(list);
+#include "compiler.h"
+
+code PARSER_parse(list);
 
 
 struct __PARSER__{
-    list (*parse)(list);
+    code (*parse)(list);
 };
 
 extern struct __PARSER__ parser;

@@ -16,7 +16,7 @@ struct __PARSER__ parser = {
 
 static uint8 brace_deepth = 1;
 
-static void EMIT_SIGN(list* bytecode, uint8 sign){
+static void EMIT_SIGN(code* result, uint8 sign){
     if(bytecode->length + 1 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -39,7 +39,7 @@ static void EMIT_SIGN(list* bytecode, uint8 sign){
     bytecode->length += 1;
 }
 
-static void EMIT_OPCODE(list* bytecode, uint8 opcode){
+static void EMIT_OPCODE(code* result, uint8 opcode){
     if(bytecode->length + 1 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -47,7 +47,7 @@ static void EMIT_OPCODE(list* bytecode, uint8 opcode){
     bytecode->length += 1;
 }
 
-static void EMIT_VALUE(list* bytecode, uint16 pos){
+static void EMIT_VALUE(code* result, uint16 pos){
     if(bytecode->length + 3 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -56,7 +56,7 @@ static void EMIT_VALUE(list* bytecode, uint16 pos){
     bytecode->length += 3;
 }
 
-static void EMIT_OFFSET(list* bytecode, uint16 offset){
+static void EMIT_OFFSET(code* result, uint16 offset){
     if(bytecode->length + 2 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -64,7 +64,7 @@ static void EMIT_OFFSET(list* bytecode, uint16 offset){
     bytecode->length += 2;
 }
 
-static void EMIT_PTR(list* bytecode, uint16 deepth, uint32 pos){
+static void EMIT_PTR(code* result, uint16 deepth, uint32 pos){
     if(bytecode->length + 6 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -73,7 +73,7 @@ static void EMIT_PTR(list* bytecode, uint16 deepth, uint32 pos){
     bytecode->length += 6;
 }
 
-static void EMIT_CONST(list* bytecode, uint16 pos){
+static void EMIT_CONST(code* result, uint16 pos){
     if(bytecode->length + 3 > bytecode->_capacity){
         list_expand(bytecode, bytecode->_capacity + 1024);
     }
@@ -117,7 +117,7 @@ static int precedence[32] = {
     [TOKEN_OR] = 0
 };
 
-static void parse_expr(list* bytecode, list* tokens, int* idx){
+static void parse_expr(code* result, list* tokens, int* idx){
     stack sign_stack = stack_create(token);
     bool is_negate = false;
     while(list_get(token, tokens, *idx).type != TOKEN_SEMICOLON && list_get(token, tokens, *idx).type != TOKEN_COMMA){
@@ -221,11 +221,11 @@ static void parse_expr(list* bytecode, list* tokens, int* idx){
 }
 
 
-static void parse_stmt(list* bytecode, list* tokens, int* idx){
+static void parse_stmt(code* result, list* tokens, int* idx){
     switch(list_get(token, tokens, *idx).type){
         case TOKEN_VAR:{
             *idx += 1;
-            int set_pos = env.set_var(list_get(token, tokens, *idx).lexeme);
+            list_append(&result->global_var, view_to_str(list_get(token, tokens, *idx).lexeme));
             *idx += 1;
             if(list_get(token, tokens, *idx).type == TOKEN_EQUAL){
                 *idx += 1;
@@ -266,16 +266,27 @@ static void parse_stmt(list* bytecode, list* tokens, int* idx){
 }
 
 
+static void parse_block(code* result, list* tokens, int* idx){
+    while(list_get(token, tokens, *idx).type != TOKEN_RIGHT_BRACE){
+        parse_stmt(bytecode, tokens, idx);
+    }
+    *idx += 1;
+}
+
+
 /**
  * @brief parse the token list to bytecode
  * @param tokens: the token list
  * @return the bytecode list
 */
-list PARSER_parse(list tokens){
-    list products = list_create(uint8);
+code PARSER_parse(list tokens){
+    code result = {
+        .global_var = list_create(str),
+        .main_func =  list_create(char),
+    }
     int idx = 0;
     while(list_get(token, &tokens, idx).type != TOKEN_EOF){
-        parse_stmt(&products, &tokens, &idx);
+        parse_stmt(&code, &tokens, &idx);
     }
-    return products;
+    return result;
 }

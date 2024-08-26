@@ -183,5 +183,37 @@ void raise(string type, string msg){
 }
 
 
+string FORMAT(int a){
+    static char buffer[1024];
+    switch(GET_TYPE(a)){
+        case VAL_NIL:
+            return "nil";
+        case VAL_TRUE:
+            return "true";
+        case VAL_FALSE:
+            return "false";
+        case VAL_NUMBER:
+            sprintf(buffer, "%lf", AS_NUMBER(a));
+            return buffer;
+        case VAL_STRING:
+            return AS_STRING(a);
+        case VAL_FUNC:
+            return "<func>";
+        case VAL_CLASS:
+            return "<class>";
+        case VAL_METHOD:
+            return "<method>";
+    }
+    return "unknown";
+}
+
+
+/* NATIVE FUNCTION AND CLASS*/ 
+int print(int a){
+    printf(FORMAT(a));
+    printf("\n");
+    return 0;
+}
+
 
 #endif

@@ -3,11 +3,20 @@
 
 #include <c_types.h>
 
-list COMPILER_compile(str source);
+typedef struct {
+    list global_var; // list<str>
+    list main_func;  // list<char>
+} code;
+
+code COMPILER_generate(str);
+void     COMPILER_save(code, str);
+void     COMPILER_compile(str);
 
 
 struct __COMPILER__{
-    list (*compile)(str);
+    code (*generate)(str);
+    void     (*save)(code, str);
+    void     (*compile)(str);
 };
 
 extern struct __COMPILER__ compiler;

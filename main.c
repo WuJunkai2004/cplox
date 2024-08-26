@@ -1,8 +1,9 @@
 #include <c_types.h>
 #include <stdio.h>
 
-#include "lox.h"
+
 #include "file.h"
+#include "compiler.h"
 #include "option.h"
 #include "memory.h"
 #include "vm.h"
@@ -34,9 +35,11 @@ int main(int argc_len, char* params[]){
         return 0;
     }
 
-    // run the REPL mode from the command line
-    if(mode.repl){
-        return lox.repl_run();
+    str content = getFileContent(mode.input);
+    if(content == NULL){
+        throw(FILE_NOT_FOUND_ERROR, "file %s not found", mode.input);
     }
-    return lox.file_run(mode.input);
+    code p = compiler.generate(content);
+    compiler.save(p, mode.input);
+    compiler.compile(mode.input);
 }

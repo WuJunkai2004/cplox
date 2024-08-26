@@ -9,20 +9,6 @@
 #include "vm.h"
 #include "error.h"
 
-int LOX_repl_run(){
-    str line = NULL;
-    while(1){
-        printf("lox> ");
-        line = getConsoleInput();
-        if(line[0] == 0){
-            break;
-        }
-        list bytecode = compiler.compile(line);
-        vm.run(bytecode._data, bytecode.length);
-    }
-    return 0;
-}
-
 
 int LOX_file_run(str path){
     str content = getFileContent(path);

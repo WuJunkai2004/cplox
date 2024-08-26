@@ -6,6 +6,10 @@
 
 // 获取文件后缀
 str_view getFileExtension(str);
+// 获取文件地址
+str_view getFileDir(str);
+// 获取文件名
+str_view getFileName(str);
 
 str      getFileContent(str);
 str      getFileBinary(str);
