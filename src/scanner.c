@@ -256,6 +256,7 @@ static token scan_token(str source, int* current) {
         case '_':
             return scan_identifier(source, current, line);
         case '\0':
+            line += 1;
             return token_make(TOKEN_EOF, line);
     }
     return scan_token(source, current);
