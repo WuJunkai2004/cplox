@@ -37,7 +37,7 @@ void COMPILER_save(struct code product, str path) {
     fprintf(file, "#include \"lox_native.c\"\n");
     // print the variable
     for(int i = 0; i < product.global_var.length; i++){
-        fprintf(file, "int %s;", list_get(str, &product.global_var, i));
+        fprintf(file, "int %s = 0;", list_get(str, &product.global_var, i));
     }
     // print the main function
     fprintf(file, "int main(){\n");

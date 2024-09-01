@@ -14,6 +14,9 @@ str_view getFileName(str);
 str      getFileContent(str);
 str      getFileBinary(str);
 
+// 
+FILE*    getMemoryFile(size_t);
+
 size_t   getFileSize(str, str);
 
 

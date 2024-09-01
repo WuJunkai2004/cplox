@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "vm.h"
 #include "env.h"
+#include "error.h"
 
 void init(){
     memory.init();

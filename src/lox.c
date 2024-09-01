@@ -15,7 +15,7 @@ int LOX_file_run(str path){
     if(content == NULL){
         throw(FILE_NOT_FOUND_ERROR, "file %s not found", path);
     }
-    list product = compiler.compile(content);
+    compiler.compile(content);
     free(content);
 
     int exit_code = vm.run(product._data, product.length);

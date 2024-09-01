@@ -55,3 +55,13 @@ size_t getFileSize(str path, str fmode){
     fclose(file);
     return size;
 }
+
+
+FILE* getMemoryFile(size_t buffer_size){
+    char *buffer = NULL;
+    free(buffer);
+    buffer = (char*)malloc(buffer_size);
+    memset(buffer, 0, buffer_size);
+    FILE* file = fmemopen(buffer, buffer_size, "w+");
+    return file;
+}
