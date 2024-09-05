@@ -7,7 +7,6 @@
 
 
 #include <string>
-#include <format>
 
 #include <ostream>
 
@@ -27,32 +26,6 @@ public:
     std::string get_literal();
 
     std::string to_string();
-
-    token operator+(token);
-    token operator-(token);
-    token operator*(token);
-    token operator/(token);
-
-    token operator==(token);
-    token operator!=(token);
-    token operator< (token);
-    token operator> (token);
-    token operator<=(token);
-    token operator>=(token);
-
-    operator bool();
-
-    friend bool is_same_type(const token*, const token*);
-    friend bool is_bool_type(const token*);
-    friend bool is_comparable(const token*, const token*);
-
-    friend std::ostream& operator<<(std::ostream&, const token);
 };
-
-bool is_same_type(const token*, const token*);
-bool is_bool_type(const token*);
-bool is_comparable(const token*, const token*);
-
-std::ostream& operator<<(std::ostream&, const token);
 
 #endif // __TOKEN_HPP__

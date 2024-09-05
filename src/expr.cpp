@@ -22,8 +22,8 @@ expr_binary::~expr_binary(){
     delete right;
 }
 
-token expr_binary::accept(){
-    token l_var = code::interpreter::evaluate(left);
+var expr_binary::accept(){
+    var l_var = code::interpreter::evaluate(left);
     switch(operate.get_type()){
         case token_type::PLUS:
             return l_var + code::interpreter::evaluate(right);
@@ -58,7 +58,7 @@ token expr_binary::accept(){
         default:
             lox::raise_runtime_error(operate.get_line(), "Unknown binary operator.");
     }
-    return token(token_type::NIL, "", "", -1);
+    return var();
 }
 
 int expr_binary::build(){
@@ -78,7 +78,7 @@ expr_unary::~expr_unary(){
     delete right;
 }
 
-token expr_unary::accept(){
+var expr_unary::accept(){
     token r_var = code::interpreter::evaluate(right);
     token result(token_type::NIL, "", "", -1);
     switch(operate.get_type()){
@@ -110,8 +110,8 @@ expr_literal::expr_literal(token value_):
 
 expr_literal::~expr_literal(){}
 
-token expr_literal::accept(){
-    return value;
+var expr_literal::accept(){
+    return var(value.get_type(), value.get_literal());
 }
 
 int expr_literal::build(){
@@ -128,7 +128,7 @@ expr_grouping::~expr_grouping(){
     delete expression;
 }
 
-token expr_grouping::accept(){
+var expr_grouping::accept(){
     return code::interpreter::evaluate(expression);
 }
 
@@ -143,7 +143,7 @@ expr_variable::expr_variable(token attr_):
 
 expr_variable::~expr_variable(){}
 
-token expr_variable::accept(){
+var expr_variable::accept(){
     token res = env::get(attr);
     return token(res.get_type(), res.get_lexeme(), res.get_literal(), attr.get_line());
 }
@@ -164,7 +164,7 @@ expr_assign::~expr_assign(){
     delete value;
 }
 
-token expr_assign::accept(){
+var expr_assign::accept(){
     token real_name = code::interpreter::evaluate(this->name);
     token res = code::interpreter::evaluate(value);
     env::assign(real_name.get_lexeme(), res);
@@ -191,7 +191,7 @@ expr_call::~expr_call(){
     }
 }
 
-token expr_call::accept(){
+var expr_call::accept(){
     token callee_var = code::interpreter::evaluate(callee);
     if(callee_var.get_type() != token_type::FUN && callee_var.get_type() != token_type::METHOD){
         lox::raise_runtime_error(callee_var.get_line(), "Can only call functions or classes' methods.");
@@ -239,7 +239,7 @@ expr_dot::~expr_dot(){
     delete object;
 }
 
-token expr_dot::accept(){
+var expr_dot::accept(){
     token obj = code::interpreter::evaluate(object);
     if(obj.get_type() != token_type::CLASS){
         lox::raise_runtime_error(obj.get_line(), "Only instances have properties.");
@@ -268,7 +268,7 @@ expr_this::expr_this(){}
 
 expr_this::~expr_this(){}
 
-token expr_this::accept(){
+var expr_this::accept(){
     return this_stack.view_scope();
 }
 

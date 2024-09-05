@@ -8,6 +8,7 @@
 #include "stmt.hpp"
 #include "token.hpp"
 #include "return.hpp"
+#include "var.hpp"
 #include "vm.hpp"
 
 #include <vector>
@@ -24,7 +25,7 @@ namespace code{
     namespace interpreter{
         void interpret(std::vector<stmt>);
 
-        token evaluate(expr);
+        var evaluate(expr);
 
         void execute(stmt);
         void execute_block(std::vector<stmt>);

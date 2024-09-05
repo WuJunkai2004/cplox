@@ -7,6 +7,7 @@
 #include "parser.hpp"
 #include "scanner.hpp"
 #include "native.hpp"
+#include "var.hpp"
 #include "vm.hpp"
 
 #include <iostream>
@@ -70,9 +71,9 @@ void code::interpreter::execute(stmt statement){
 }
 
 
-token code::interpreter::evaluate(expr expression){
+var code::interpreter::evaluate(expr expression){
     if(expression == nullptr){
-        return token(token_type::NIL, "", "", -1);
+        return var();
     }
     return expression->accept();
 }

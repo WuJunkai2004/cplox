@@ -19,7 +19,32 @@ public:
     var(token_type, std::string);
     token_type  get_type();
     std::string get_value();
+
+    var operator+(var);
+    var operator-(var);
+    var operator*(var);
+    var operator/(var);
+
+    var operator==(var);
+    var operator!=(var);
+    var operator< (var);
+    var operator> (var);
+    var operator<=(var);
+    var operator>=(var);
+
+    operator bool();
+
+    friend bool is_same_type(const var*, const var*);
+    friend bool is_bool_type(const var*);
+    friend bool is_comparable(const var*, const var*);
+
+    friend std::ostream& operator<<(std::ostream&, const var);
 };
+
+
+bool is_same_type(const var*, const var*);
+bool is_bool_type(const var*);
+bool is_comparable(const var*, const var*);
 
 
 class func{

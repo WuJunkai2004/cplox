@@ -60,7 +60,8 @@ namespace env{
 
     enum scope_type{
         GLOBAL,
-        LOCAL
+        LOCAL,
+        UNKNOWN
     };
 
     struct variable{
