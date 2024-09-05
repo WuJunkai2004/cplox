@@ -7,42 +7,16 @@
 #include <vector>
 #include <map>
 #include <set>
+#include <stack>
 
 #include "token.hpp"
 #include "token_type.hpp"
-#include "stmt.hpp"
+#include "var.hpp"
 
 
-class var{
-private:
-    token_type type;
-    std::string value;
-public:
-    var();
-    var(token_type, std::string);
-    token_type  get_type();
-    std::string get_value();
-};
-
+using symbol_name = std::vector<std::string>;
+using symbol_value = std::vector<var>;
 using symbol_table = std::map<std::string, var>;
-
-
-class func{
-private:
-    std::vector<token> params;
-    stmt body;
-    int  defined;
-public:
-    func();
-    func(std::vector<token>, stmt);
-    func(std::vector<token>, int);
-    int get_arity();
-    stmt get_body();
-    std::string get_param(int);
-    int get_defined();
-    bool is_defined();
-};
-
 using function_table = std::map<std::string, func>;
 
 inline std::set<std::string> class_register;
@@ -50,20 +24,23 @@ inline symbol_table returned_instance;
 
 class environment{
 private:
-    environment* parent;
-    symbol_table table;
+    symbol_name    names;
+    symbol_value   values;
     function_table fun;
+    std::stack<int> scope_stack;
 public:
-    environment(environment* = nullptr);
+    environment();
     ~environment();
-    bool exists(std::string);
-    void define(std::string, var);
+    int  exists(std::string);
+    int  define(std::string, var);
+    int  assign(int,         var);
     void define_func(std::string, std::vector<token>, int);
     void define_func(std::string, std::vector<token>, stmt);
 
     var  get(std::string);
+    var  get(int);
     func get_func(std::string);
-    environment* get_parent();
+
     symbol_table get_this();
 };
 
@@ -71,26 +48,38 @@ public:
 namespace env{
     inline environment* global;
     inline environment* locale;
+    int scope_depth = 0;
+
     void init();
     void push();
     void pop();
+    environment* get_current();
 
-    bool is_global_scope();
+    void define(std::string, var);
+    void assign(std::string, var);
 
-    void define(std::string, token, environment* = locale);
-    void assign(std::string, token, environment* = locale);
+    enum scope_type{
+        GLOBAL,
+        LOCAL
+    };
 
-    token get(token, environment* = locale);
-    token get_arg(std::string);
+    struct variable{
+        scope_type scope;
+        int        offset;
+    };
 
-    bool func_exist(std::string, environment* current = locale);
-    void func_define(std::string, int, int, environment* current = locale);
-    void func_define(std::string, std::vector<token>, stmt, environment* current = locale);
+    var get(variable);
+    var get(token);
+    variable get_arg(std::string);
+
+    bool func_exist(std::string);
+    void func_define(std::string, int, int);
+    void func_define(std::string, std::vector<token>, stmt);
     func func_search(std::string);
 
     void class_define(std::string, std::map<std::string, stmt_method*>);
 }
 
-
+/** new env struct **/
 
 #endif // __ENV_HPP__

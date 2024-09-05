@@ -2,92 +2,42 @@
 #include "lox.hpp"
 #include "token.hpp"
 #include "token_type.hpp"
+#include "var.hpp"
 
 #include <string>
 #include <map>
-
-/**
- * @brief 开销较小的储存变量的类
-*/
-var::var():
-    type(token_type::NIL),
-    value("")
-{}
-
-var::var(token_type type_, std::string value_):
-    type(type_),
-    value(value_)
-{}
-
-token_type var::get_type(){
-    return type;
-}
-
-std::string var::get_value(){
-    return value;
-}
-
-
-/**
- * @brief 函数类
-*/
-func::func():
-    defined(-1),
-    params(),
-    body(nullptr)
-{}
-
-func::func(std::vector<token> params_, stmt body_):
-    defined(0),
-    params(params_),
-    body(body_)
-{}
-
-func::func(std::vector<token> params_, int defined_):
-    defined(defined_),
-    params(params_),
-    body(nullptr)
-{}
-
-int func::get_arity(){
-    return params.size();
-}
-
-stmt func::get_body(){
-    return body;
-}
-
-std::string func::get_param(int index){
-    return params[index].get_lexeme();
-}
-
-int func::get_defined(){
-    return defined;
-}
-
-bool func::is_defined(){
-    return defined != -1;
-}
-
+#include <algorithm>
 
 /**
  * @brief 变量的环境类
 */
-environment::environment(environment* parent_):
-    parent(parent_)
+environment::environment():
+    names(),
+    values(),
+    fun()
 {}
 
 environment::~environment(){}
 
-bool environment::exists(std::string name){
-    return table.find(name) != table.end();
+int environment::exists(std::string name){
+    auto pos = std::find(names.rbegin(), names.rend(), name);
+    if(pos != names.rend()){
+        return names.size() - 1 - (pos - names.rbegin());
+    }
+    return -1;
 }
 
-void environment::define(std::string name, var value){
-    table[name] = value;
-    if(value.get_type() == token_type::CLASS && not returned_instance.empty() && name != "this"){
+int environment::define(std::string name, var value){
+    names .push_back(name);
+    values.push_back(value);
+    return values.size() - 1;
+}
+
+int environment::assign(int id, var value){
+    values[id] = value;
+    if(value.get_type() == token_type::CLASS && not returned_instance.empty() && names[id] != "this"){
         for(auto& vars : returned_instance){
-            table[name + "." + vars.first] = vars.second;
+            define(names[id] + "." + vars.first, vars.second);
         }
         returned_instance.clear();
     }
@@ -102,29 +52,27 @@ void environment::define_func(std::string name, std::vector<token> params, stmt 
 }
 
 var environment::get(std::string name){
-    if(table.find(name) != table.end()){
-        return table[name];
-    }
-    if(parent != nullptr){
-        return parent->get(name);
+    int id = exists(name);
+    if(id != -1){
+        return values[id];
     }
     lox::error(-1, "Undefined variable '" + name + "'.");
     return var();
+}
+
+var environment::get(int id){
+    return values[id];
 }
 
 func environment::get_func(std::string name){
     return fun[name];
 }
 
-environment* environment::get_parent(){
-    return parent;
-}
-
 symbol_table environment::get_this(){
     symbol_table res;
-    for(auto& vars : table){
-        if(vars.first.length() > 5 && vars.first.substr(0, 5) == "this."){
-            res[vars.first.substr(5)] = vars.second;
+    for(auto var_name : names){
+        if(var_name.length() > 5 && var_name.substr(0, 5) == "this."){
+            res[var_name.substr(5)] = values[exists(var_name)];
         }
     }
     return res;
@@ -135,97 +83,88 @@ symbol_table environment::get_this(){
  * @brief 操作环境的函数
 */
 void env::init(){
-    static bool had_init = false;
-    if(had_init){
-        return;
-    }
-    had_init = true;
     global = new environment();
-    locale = global;
+    locale = new environment();
 }
 
 void env::push(){
-    environment* parent = locale;
-    locale = new environment(parent);
+    scope_depth++;
 }
 
 void env::pop(){
-    if(locale == global){
-        return;
+    if(scope_depth){
+        scope_depth--;
     }
-    environment* parent = locale->get_parent();
-    delete locale;
-    locale = parent;
 }
 
-
-bool env::is_global_scope(){
-    return locale == global;
+environment* env::get_current(){
+    if(scope_depth){
+        return locale;
+    }
+    return global;
 }
 
 
 /**
  * @brief 操作环境中变量的函数
 */
-void env::define(std::string name, token value, environment* current){
+void env::define(std::string name, var value){
+    environment* current = get_current();
     if(current->exists(name)){
-        lox::error(value.get_line(), "Variable '" + name + "' already declared in this scope.");
+        lox::error(-1, "Variable '" + name + "' already declared in this scope.");
         return;
     }
-    var saved(value.get_type(), value.get_literal());
-    current->define(name, saved);
+    current->define(name, value);
 }
 
-void env::assign(std::string name, token value, environment* current){
-    std::size_t dot_pos = name.find('.');
-    std::string member = "";
-    if(dot_pos != std::string::npos){
-        member = name.substr(dot_pos + 1);
-        name = name.substr(0, dot_pos);
+void env::assign(std::string name, var value){
+    int locale_id = locale->exists(name);
+    if(locale_id != -1){
+        locale->assign(locale_id, value);
     }
-    while(current != nullptr && not current->exists(name)){
-        current = current->get_parent();
+    int global_id = global->exists(name);
+    if(global_id != -1){
+        global->assign(global_id, value);
     }
-    if(current == nullptr){
-        lox::error(value.get_line(), "Undefined variable '" + name + "'.");
-        return;
-    }
-    if(not member.empty()){
-        name = name + "." + member;
-    }
-    current->define(name, var(value.get_type(), value.get_literal()));
+    lox::error(-1, "Undefined variable '" + name + "'.");
 }
 
-token env::get(token name, environment* current){
+var env::get(token name){
+    /** @todo */
     // find the dot
     std::size_t dot_pos = name.get_lexeme().find('.');
     if(dot_pos == std::string::npos){
-        var res = current->get(name.get_lexeme());
-        return token(res.get_type(), name.get_lexeme(), res.get_value(), name.get_line());
+        return get( get_arg( name.get_lexeme() ) );
     }
     std::string ins_name = name.get_lexeme().substr(0, dot_pos);
     // 查询实例是否存在
-    while(current != nullptr && not current->exists(ins_name)){
-        current = current->get_parent();
-    }
-    if(current == nullptr){
-        lox::error(name.get_line(), "Undefined instance '" + ins_name + "'.");
-        return token(token_type::NIL, name.get_lexeme(), name.get_lexeme(), name.get_line());
-    }
-    var ins = current->get(ins_name);
+    var ins = get( get_arg(ins_name) );
     std::string method_name = name.get_lexeme().substr(dot_pos + 1);
-    if(func_exist(ins.get_value()+"."+method_name, current)){
-        return token(token_type::METHOD, ins_name+"."+method_name, ins.get_value()+"."+method_name, name.get_line());
+    if(func_exist(ins.get_value()+"."+method_name)){
+        return var(token_type::METHOD, ins.get_value()+"."+method_name);
     }
-    if(not current->exists(name.get_lexeme())){
-        return token(token_type::NIL, name.get_lexeme(), name.get_lexeme(), name.get_line());
-    }
-    var res = current->get(name.get_lexeme());
-    return token(res.get_type(), name.get_lexeme(), res.get_value(), name.get_line());
+    return get( get_arg(name.get_lexeme()) );
 }
 
-token env::get_arg(std::string name){
-    return env::get(token(token_type::IDENTIFIER, name, "", 0));
+var env::get(env::variable pos){
+    switch(pos.scope){
+        case GLOBAL:
+            return global->get(pos.offset);
+        case LOCAL:
+            return locale->get(pos.offset);
+    }
+}
+
+env::variable env::get_arg(std::string name){
+    int locale_id = locale->exists(name);
+    if(locale_id != -1){
+        return variable{LOCAL, locale_id};
+    }
+    int global_id = global->exists(name);
+    if(global_id != -1){
+        return variable{GLOBAL, global_id};
+    }
+    lox::error(-1, "Undefined variable '" + name + "'.");
 }
 
 
@@ -234,41 +173,47 @@ token env::get_arg(std::string name){
 */
 
 
-bool env::func_exist(std::string name, environment* current){
-    return current->exists(name) && current->get(name).get_type() == token_type::FUN;
+bool env::func_exist(std::string name){
+    int locale_id = locale->exists(name);
+    if(locale_id != -1){
+        return locale->get_func(name).is_defined();
+    }
+    int global_id = global->exists(name);
+    if(global_id != -1){
+        return global->get_func(name).is_defined();
+    }
+    return false;
 }
 
-void env::func_define(std::string name, int arity_num, int defined_pos, environment* current){
-    if(func_exist(name, current)){
+void env::func_define(std::string name, int arity_num, int defined_pos){
+    if(func_exist(name)){
         lox::error(-1, "Function '" + name + "' already declared in this scope.");
         return;
     }
+    environment* current = get_current();
     current->define      (name, var(token_type::FUN, name));
     current->define_func (name, std::vector<token>(arity_num), defined_pos);
 }
 
-void env::func_define(std::string name, std::vector<token> params, stmt body, environment* current){
-    if(func_exist(name, current)){
+void env::func_define(std::string name, std::vector<token> params, stmt body){
+    if(func_exist(name)){
         lox::error(-1, "Function '" + name + "' already declared in this scope.");
         return;
     }
+    environment* current = get_current();
     current->define      (name, var(token_type::FUN, name));
     current->define_func (name, params, body);
 }
 
 func env::func_search(std::string name){
     // 如果有dot
-    environment* current = locale;
-    while(current != nullptr &&
-         (not current->exists(name) || 
-          current->get(name).get_type() != token_type::FUN)){
-        current = current->get_parent();
+    if(locale->exists(name) != -1){
+        return locale->get_func(name);
     }
-    if(current == nullptr){
-        lox::error(-1, "Undefined function '" + name + "'.");
-        return func();
+    if(global->exists(name) != -1){
+        return global->get_func(name);
     }
-    return current->get_func(name);
+    lox::error(-1, "Undefined function '" + name + "'.");
 }
 
 
@@ -276,8 +221,8 @@ func env::func_search(std::string name){
  * @brief 操作环境中类的函数
 */
 void env::class_define(std::string name, std::map<std::string, stmt_method*> methods){
-    if(not is_global_scope()){
-        lox::error(-1, "Classes can only be defined in global scope.");
+    if(scope_depth){
+        lox::error(-1, "Class can only be defined in global scope.");
         return;
     }
     if(global->exists(name)){
@@ -291,16 +236,15 @@ void env::class_define(std::string name, std::map<std::string, stmt_method*> met
     class_register.insert(name);                        // 将类名加入类注册表
     func_define(name, 
         methods["init"]->params, 
-        new stmt_init(name, methods["init"]->body),
-    global); // 在全局环境中定义初始化函数
+        new stmt_init(name, methods["init"]->body)
+    ); // 在全局环境中定义初始化函数
     for(auto& method : methods){
         if(method.first == "init"){
             continue;
         }
         func_define(name + "." + method.first,
             method.second->params, 
-            method.second->body,
-            global
+            method.second->body
         ); // 在全局环境中定义类的方法
     }
 }
