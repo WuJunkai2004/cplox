@@ -8,7 +8,6 @@
 #include "stmt.hpp"
 #include "token.hpp"
 #include "return.hpp"
-#include "var.hpp"
 #include "vm.hpp"
 
 #include <vector>

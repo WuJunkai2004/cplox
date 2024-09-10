@@ -35,7 +35,7 @@ public:
     int  define(std::string, var);
     int  assign(int,         var);
     void define_func(std::string, std::vector<token>, int);
-    void define_func(std::string, std::vector<token>, stmt);
+    void define_func(std::string, std::vector<token>, void*);
 
     var  get(std::string);
     var  get(int);
@@ -75,10 +75,10 @@ namespace env{
 
     bool func_exist(std::string);
     void func_define(std::string, int, int);
-    void func_define(std::string, std::vector<token>, stmt);
+    void func_define(std::string, std::vector<token>, void*);
     func func_search(std::string);
 
-    void class_define(std::string, std::map<std::string, stmt_method*>);
+    void class_define(std::string, std::map<std::string, void*>);
 }
 
 /** new env struct **/

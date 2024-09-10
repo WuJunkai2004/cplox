@@ -1,7 +1,7 @@
 #include "var.hpp"
+
 #include "token_type.hpp"
 #include "token.hpp"
-#include "stmt.hpp"
 #include "lox.hpp"
 
 #include <string>
@@ -40,7 +40,7 @@ func::func():
     body(nullptr)
 {}
 
-func::func(std::vector<token> params_, stmt body_):
+func::func(std::vector<token> params_, void* body_):
     defined(0),
     params(params_),
     body(body_)
@@ -56,7 +56,7 @@ int func::get_arity(){
     return params.size();
 }
 
-stmt func::get_body(){
+void* func::get_body(){
     return body;
 }
 

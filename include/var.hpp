@@ -8,7 +8,7 @@
 
 #include "token.hpp"
 #include "token_type.hpp"
-#include "stmt.hpp"
+
 
 class var{
 private:
@@ -50,14 +50,14 @@ bool is_comparable(const var*, const var*);
 class func{
 private:
     std::vector<token> params;
-    stmt body;
+    void* body;
     int  defined;
 public:
     func();
-    func(std::vector<token>, stmt);
+    func(std::vector<token>, void*);
     func(std::vector<token>, int);
     int get_arity();
-    stmt get_body();
+    void* get_body();
     std::string get_param(int);
     int get_defined();
     bool is_defined();

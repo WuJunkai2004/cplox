@@ -3,6 +3,7 @@
 #include "token.hpp"
 #include "token_type.hpp"
 #include "var.hpp"
+#include "stmt.hpp"
 
 #include <string>
 #include <map>
@@ -47,7 +48,7 @@ void environment::define_func(std::string name, std::vector<token> params, int d
     fun[name] = func(params, defined);
 }
 
-void environment::define_func(std::string name, std::vector<token> params, stmt body){
+void environment::define_func(std::string name, std::vector<token> params, void* body){
     fun[name] = func(params, body);
 }
 
@@ -195,7 +196,7 @@ void env::func_define(std::string name, int arity_num, int defined_pos){
     current->define_func (name, std::vector<token>(arity_num), defined_pos);
 }
 
-void env::func_define(std::string name, std::vector<token> params, stmt body){
+void env::func_define(std::string name, std::vector<token> params, void* body){
     if(func_exist(name)){
         lox::error(-1, "Function '" + name + "' already declared in this scope.");
         return;
@@ -220,7 +221,7 @@ func env::func_search(std::string name){
 /**
  * @brief 操作环境中类的函数
 */
-void env::class_define(std::string name, std::map<std::string, stmt_method*> methods){
+void env::class_define(std::string name, std::map<std::string, void*> methods_){
     if(scope_depth){
         lox::error(-1, "Class can only be defined in global scope.");
         return;
