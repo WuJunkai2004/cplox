@@ -39,6 +39,12 @@ using function_table = std::map<std::string, func>;
 inline std::set<std::string> class_register;
 inline symbol_table returned_instance;
 
+namespace env{
+    void push();
+    void pop();
+}
+
+
 class environment{
 private:
     symbol_name    names;
@@ -59,6 +65,9 @@ public:
     func get_func(std::string);
 
     symbol_table get_this();
+
+    friend void env::push();
+    friend void env::pop();
 };
 
 
@@ -68,8 +77,7 @@ namespace env{
     inline int scope_depth = 0;
 
     void init();
-    void push();
-    void pop();
+
     environment* get_current();
 
     void define(std::string, var);

@@ -58,14 +58,16 @@ environment::environment():
     names(),
     values(),
     fun()
-{}
+{
+    scope_stack.push(0);
+}
 
 environment::~environment(){}
 
 int environment::exists(std::string name){
-    auto pos = std::find(names.rbegin(), names.rend(), name);
-    if(pos != names.rend()){
-        return names.size() - 1 - (pos - names.rbegin());
+    auto pos = std::find(names.begin() + scope_stack.top(), names.end(), name);
+    if(pos != names.end()){
+        return pos - names.begin();
     }
     return -1;
 }
@@ -133,12 +135,14 @@ void env::init(){
 
 void env::push(){
     scope_depth++;
+    locale->scope_stack.push(locale->names.size());
 }
 
 void env::pop(){
     if(scope_depth){
         scope_depth--;
     }
+    locale->scope_stack.pop();
 }
 
 environment* env::get_current(){
@@ -154,7 +158,7 @@ environment* env::get_current(){
 */
 void env::define(std::string name, var value){
     environment* current = get_current();
-    if(current->exists(name)){
+    if(current->exists(name) != -1){
         lox::error(-1, "Variable '" + name + "' already declared in this scope.");
         return;
     }
@@ -277,7 +281,7 @@ void env::class_define(std::string name, std::map<std::string, stmt_method*> met
         lox::error(-1, "Class can only be defined in global scope.");
         return;
     }
-    if(global->exists(name)){
+    if(global->exists(name) != -1){
         lox::error(-1, "The name '" + name + "' already declared.");
         return;
     }
