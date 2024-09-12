@@ -7,7 +7,6 @@
 #include "parser.hpp"
 #include "scanner.hpp"
 #include "native.hpp"
-#include "var.hpp"
 #include "vm.hpp"
 
 #include <iostream>

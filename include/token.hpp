@@ -5,10 +5,58 @@
 
 #include "token_type.hpp"
 
-
 #include <string>
-
 #include <ostream>
+
+namespace env{
+        enum scope_type{
+        GLOBAL,
+        LOCAL,
+        UNKNOWN
+    };
+
+    struct variable{
+        scope_type scope;
+        int        offset;
+    };
+}
+
+
+class var{
+private:
+    token_type type;
+    std::string value;
+public:
+    var();
+    var(token_type, std::string);
+    token_type  get_type();
+    std::string get_value();
+
+    var operator+(var);
+    var operator-(var);
+    var operator*(var);
+    var operator/(var);
+
+    var operator==(var);
+    var operator!=(var);
+    var operator< (var);
+    var operator> (var);
+    var operator<=(var);
+    var operator>=(var);
+
+    operator bool();
+
+    friend bool is_same_type(const var*, const var*);
+    friend bool is_bool_type(const var*);
+    friend bool is_comparable(const var*, const var*);
+
+    friend std::ostream& operator<<(std::ostream&, const var);
+};
+
+bool is_same_type(const var*, const var*);
+bool is_bool_type(const var*);
+bool is_comparable(const var*, const var*);
+
 
 class token{
 private:
@@ -25,7 +73,7 @@ public:
     std::string get_lexeme();
     std::string get_literal();
 
-    std::string to_string();
+    var to_var();
 };
 
 #endif // __TOKEN_HPP__

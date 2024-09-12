@@ -11,7 +11,24 @@
 
 #include "token.hpp"
 #include "token_type.hpp"
-#include "var.hpp"
+#include "stmt.hpp"
+
+
+class func{
+private:
+    std::vector<token> params;
+    stmt body;
+    int  defined;
+public:
+    func();
+    func(std::vector<token>, stmt);
+    func(std::vector<token>, int);
+    int get_arity();
+    stmt get_body();
+    std::string get_param(int);
+    int get_defined();
+    bool is_defined();
+};
 
 
 using symbol_name = std::vector<std::string>;
@@ -35,7 +52,7 @@ public:
     int  define(std::string, var);
     int  assign(int,         var);
     void define_func(std::string, std::vector<token>, int);
-    void define_func(std::string, std::vector<token>, void*);
+    void define_func(std::string, std::vector<token>, stmt);
 
     var  get(std::string);
     var  get(int);
@@ -58,27 +75,16 @@ namespace env{
     void define(std::string, var);
     void assign(std::string, var);
 
-    enum scope_type{
-        GLOBAL,
-        LOCAL,
-        UNKNOWN
-    };
-
-    struct variable{
-        scope_type scope;
-        int        offset;
-    };
-
     var get(variable);
     var get(token);
     variable get_arg(std::string);
 
     bool func_exist(std::string);
     void func_define(std::string, int, int);
-    void func_define(std::string, std::vector<token>, void*);
+    void func_define(std::string, std::vector<token>, stmt);
     func func_search(std::string);
 
-    void class_define(std::string, std::map<std::string, void*>);
+    void class_define(std::string, std::map<std::string, stmt>);
 }
 
 /** new env struct **/

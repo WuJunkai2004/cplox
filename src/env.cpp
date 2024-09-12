@@ -2,12 +2,54 @@
 #include "lox.hpp"
 #include "token.hpp"
 #include "token_type.hpp"
-#include "var.hpp"
 #include "stmt.hpp"
 
 #include <string>
 #include <map>
 #include <algorithm>
+
+/**
+ * @brief 函数类
+*/
+func::func():
+    defined(-1),
+    params(),
+    body(nullptr)
+{}
+
+func::func(std::vector<token> params_, stmt body_):
+    defined(0),
+    params(params_),
+    body(body_)
+{}
+
+func::func(std::vector<token> params_, int defined_):
+    defined(defined_),
+    params(params_),
+    body(nullptr)
+{}
+
+int func::get_arity(){
+    return params.size();
+}
+
+stmt func::get_body(){
+    return body;
+}
+
+std::string func::get_param(int index){
+    return params[index].get_lexeme();
+}
+
+int func::get_defined(){
+    return defined;
+}
+
+bool func::is_defined(){
+    return defined != -1;
+}
+
+
 
 /**
  * @brief 变量的环境类
@@ -48,7 +90,7 @@ void environment::define_func(std::string name, std::vector<token> params, int d
     fun[name] = func(params, defined);
 }
 
-void environment::define_func(std::string name, std::vector<token> params, void* body){
+void environment::define_func(std::string name, std::vector<token> params, stmt body){
     fun[name] = func(params, body);
 }
 
@@ -196,7 +238,7 @@ void env::func_define(std::string name, int arity_num, int defined_pos){
     current->define_func (name, std::vector<token>(arity_num), defined_pos);
 }
 
-void env::func_define(std::string name, std::vector<token> params, void* body){
+void env::func_define(std::string name, std::vector<token> params, stmt body){
     if(func_exist(name)){
         lox::error(-1, "Function '" + name + "' already declared in this scope.");
         return;
@@ -221,7 +263,7 @@ func env::func_search(std::string name){
 /**
  * @brief 操作环境中类的函数
 */
-void env::class_define(std::string name, std::map<std::string, void*> methods_){
+void env::class_define(std::string name, std::map<std::string, stmt> methods_){
     if(scope_depth){
         lox::error(-1, "Class can only be defined in global scope.");
         return;

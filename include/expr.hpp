@@ -3,8 +3,6 @@
 #ifndef __EXPR_HPP__
 #define __EXPR_HPP__
 
-#include "var.hpp"
-#include "env.hpp"
 #include "token.hpp"
 #include "token_type.hpp"
 
