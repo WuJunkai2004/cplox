@@ -9,7 +9,7 @@
 #include <ostream>
 
 namespace env{
-        enum scope_type{
+    enum scope_type{
         GLOBAL,
         LOCAL,
         UNKNOWN
@@ -18,6 +18,9 @@ namespace env{
     struct variable{
         scope_type scope;
         int        offset;
+
+        variable();
+        variable(scope_type, int);
     };
 }
 

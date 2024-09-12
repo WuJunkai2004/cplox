@@ -21,6 +21,7 @@ std::string bcode_to_string(bcode bc){
 void vm::run(const std::vector<bcode>& codes){
     int index = 0;
     while(index < codes.size()){
+        /*
         switch(codes[index].code){
             case operation_code::CONSTANT:
                 value_stack.push(string_to_token(codes[index].value));
@@ -143,6 +144,7 @@ void vm::run(const std::vector<bcode>& codes){
 
         }
         index++;
+        */
     }
 }
 

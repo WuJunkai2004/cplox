@@ -65,7 +65,7 @@ public:
 namespace env{
     inline environment* global;
     inline environment* locale;
-    int scope_depth = 0;
+    inline int scope_depth = 0;
 
     void init();
     void push();
@@ -75,6 +75,7 @@ namespace env{
     void define(std::string, var);
     void assign(std::string, var);
 
+    var get(std::string);
     var get(variable);
     var get(token);
     variable get_arg(std::string);
@@ -84,7 +85,7 @@ namespace env{
     void func_define(std::string, std::vector<token>, stmt);
     func func_search(std::string);
 
-    void class_define(std::string, std::map<std::string, stmt>);
+    void class_define(std::string, std::map<std::string, stmt_method*>);
 }
 
 /** new env struct **/

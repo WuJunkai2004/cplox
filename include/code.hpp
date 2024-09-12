@@ -24,12 +24,12 @@ namespace code{
     namespace interpreter{
         void interpret(std::vector<stmt>);
 
-        var evaluate(expr);
+        var  evaluate(expr);
 
         void execute(stmt);
         void execute_block(std::vector<stmt>);
 
-        token call(func, std::vector<token>);
+        var  call(func, std::vector<var>);
     }
 
 

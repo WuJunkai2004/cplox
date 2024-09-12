@@ -85,7 +85,7 @@ void code::interpreter::execute_block(std::vector<stmt> statements){
 }
 
 
-token code::interpreter::call(func function, std::vector<token> arguments){
+var code::interpreter::call(func function, std::vector<var> arguments){
     env::push();
     ret_stack.into_scope();
     for(int i = 0; i < function.get_arity(); i++){
@@ -184,9 +184,9 @@ void code::vm::interpret(std::vector<bcode> statements){
 
 
 int code::vm::call(vm_stack& stack, int arity){
-    token callee_var = stack.pop();
-    std::string callee_name = callee_var.get_literal();
-    func  callee_func = env::func_search(callee_name);
+    var callee_var = stack.pop();
+    std::string callee_name = callee_var.get_value();
+    func callee_func = env::func_search(callee_name);
     if(callee_func.get_arity() != arity){
         std::cerr << "Function " << callee_name << " expects " << callee_func.get_arity() << " arguments, but got " << arity << std::endl;
         return -1;

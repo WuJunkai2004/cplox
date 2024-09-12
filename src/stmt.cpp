@@ -265,7 +265,7 @@ stmt_init::~stmt_init(){
 }
 
 void stmt_init::accept(){
-    token this_token(token_type::CLASS, "this", class_name, -1);        // 创建this变量
+    var this_token(token_type::CLASS, class_name);        // 创建this变量
     env::define("this", this_token);                                    // 将this变量加入环境
     this_stack.into_scope();                                            // 深入this栈
     this_stack.set( this_token );                                       // 将this变量加入this栈

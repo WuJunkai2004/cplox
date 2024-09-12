@@ -19,7 +19,7 @@ add_compile_options(-DWINVER=0x0A00 -D_WIN32_WINNT=0x0A00)
 include_directories(include)
 
 #set source directory
-#file(GLOB SOURCES "src/*.cpp")
+file(GLOB SOURCES "src/*.cpp")
 
 #find all of the hieasyx files
 #set(EASYX_PATH "D:/code/module/hi_easyx")

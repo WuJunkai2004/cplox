@@ -79,14 +79,14 @@ expr_unary::~expr_unary(){
 }
 
 var expr_unary::accept(){
-    token r_var = code::interpreter::evaluate(right);
-    token result(token_type::NIL, "", "", -1);
+    var r_var = code::interpreter::evaluate(right);
+    var result = var();
     switch(operate.get_type()){
         case token_type::MINUS:
-            result = token(token_type::NUMBER, "", "0", r_var.get_line()) - r_var;
+            result = var(token_type::NUMBER, "0") - r_var;
             break;
         case token_type::BANG:
-            result = token(r_var? token_type::FALSE: token_type::TRUE, "", "", r_var.get_line());
+            result = var(r_var? token_type::FALSE: token_type::TRUE, "");
             break;
         case token_type::PLUS:
             result = r_var;
@@ -111,11 +111,11 @@ expr_literal::expr_literal(token value_):
 expr_literal::~expr_literal(){}
 
 var expr_literal::accept(){
-    return var(value.get_type(), value.get_literal());
+    return value.to_var();
 }
 
 int expr_literal::build(){
-    code::compiler::assemble(value.get_type(), value.to_string());
+    code::compiler::assemble(value.get_type(), value.get_literal());
     return 1;
 }
 
@@ -144,8 +144,10 @@ expr_variable::expr_variable(token attr_):
 expr_variable::~expr_variable(){}
 
 var expr_variable::accept(){
-    token res = env::get(attr);
-    return token(res.get_type(), res.get_lexeme(), res.get_literal(), attr.get_line());
+    if(offset.scope == env::scope_type::UNKNOWN){
+        offset = env::get_arg(attr.get_lexeme());
+    }
+    return env::get(offset);
 }
 
 int expr_variable::build(){
@@ -165,9 +167,9 @@ expr_assign::~expr_assign(){
 }
 
 var expr_assign::accept(){
-    token real_name = code::interpreter::evaluate(this->name);
-    token res = code::interpreter::evaluate(value);
-    env::assign(real_name.get_lexeme(), res);
+    var real_name = code::interpreter::evaluate(this->name);
+    var res = code::interpreter::evaluate(value);
+    env::assign(real_name.get_value(), res);
     return res;
 }
 
@@ -192,16 +194,16 @@ expr_call::~expr_call(){
 }
 
 var expr_call::accept(){
-    token callee_var = code::interpreter::evaluate(callee);
+    var callee_var = code::interpreter::evaluate(callee);
     if(callee_var.get_type() != token_type::FUN && callee_var.get_type() != token_type::METHOD){
-        lox::raise_runtime_error(callee_var.get_line(), "Can only call functions or classes' methods.");
+        lox::raise_runtime_error(-1, "Can only call functions or classes' methods.");
     }
-    func callee_func = env::func_search(callee_var.get_literal());
+    func callee_func = env::func_search(callee_var.get_value());
     if(arguments.size() != callee_func.get_arity()){
         std::cerr << "Expected " << callee_func.get_arity() << " arguments but got " << arguments.size() << "." << std::endl;
-        return token(token_type::NIL, "", "", -1);
+        return var();
     }
-    std::vector<token> args;
+    std::vector<var> args;
     for(auto arg: arguments){
         args.push_back(code::interpreter::evaluate(arg));
     }
@@ -209,12 +211,10 @@ var expr_call::accept(){
         return code::interpreter::call(callee_func, args);
     }
     this_stack.into_scope();
-    this_stack.set( token( token_type::CLASS, 
-                            callee_var.get_lexeme() .substr(0, callee_var.get_lexeme().find('.')), 
-                            callee_var.get_literal().substr(0, callee_var.get_literal().find('.')),
-                            callee_var.get_line()
-                    ));
-    token result = code::interpreter::call(callee_func, args);
+    this_stack.set( var( token_type::CLASS,
+                         callee_var.get_value().substr(0, callee_var.get_value().find('.'))
+    ));
+    var result = code::interpreter::call(callee_func, args);
     this_stack.exit_scope();
     return result;
 }
@@ -240,17 +240,17 @@ expr_dot::~expr_dot(){
 }
 
 var expr_dot::accept(){
-    token obj = code::interpreter::evaluate(object);
+    var obj = code::interpreter::evaluate(object);
     if(obj.get_type() != token_type::CLASS){
-        lox::raise_runtime_error(obj.get_line(), "Only instances have properties.");
-        return token(token_type::NIL, "", "", -1);
+        lox::raise_runtime_error(-1, "Only instances have properties.");
+        return var();
     }
-    if(class_register.count(obj.get_literal()) == 0){
-        lox::raise_runtime_error(obj.get_line(), "Undefined class.");
-        return token(token_type::NIL, "", "", -1);
+    if(class_register.count(obj.get_value()) == 0){
+        lox::raise_runtime_error(-1, "Undefined class.");
+        return var();
     }
     token method_name(token_type::IDENTIFIER, 
-        obj.get_lexeme() + "." + name.get_lexeme(),
+        obj.get_value() + "." + name.get_lexeme(),
         name.get_lexeme(),
         name.get_line()
     );
@@ -259,7 +259,7 @@ var expr_dot::accept(){
 
 int expr_dot::build(){
     int obj_line_num = object->build();
-    code::compiler::assemble(operation_code::GET_PROPERTY, name.to_string());
+    //code::compiler::assemble(operation_code::GET_PROPERTY, name.to_string());
     return obj_line_num + 1;
 }
 

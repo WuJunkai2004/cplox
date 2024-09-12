@@ -84,6 +84,7 @@ int environment::assign(int id, var value){
         }
         returned_instance.clear();
     }
+    return id;
 }
 
 void environment::define_func(std::string name, std::vector<token> params, int defined){
@@ -177,16 +178,20 @@ var env::get(token name){
     // find the dot
     std::size_t dot_pos = name.get_lexeme().find('.');
     if(dot_pos == std::string::npos){
-        return get( get_arg( name.get_lexeme() ) );
+        return get(name.get_lexeme()) ;
     }
     std::string ins_name = name.get_lexeme().substr(0, dot_pos);
     // 查询实例是否存在
-    var ins = get( get_arg(ins_name) );
+    var ins = get(ins_name);
     std::string method_name = name.get_lexeme().substr(dot_pos + 1);
     if(func_exist(ins.get_value()+"."+method_name)){
         return var(token_type::METHOD, ins.get_value()+"."+method_name);
     }
-    return get( get_arg(name.get_lexeme()) );
+    return get(name.get_lexeme());
+}
+
+var env::get(std::string name){
+    return get(get_arg(name));
 }
 
 var env::get(env::variable pos){
@@ -195,6 +200,8 @@ var env::get(env::variable pos){
             return global->get(pos.offset);
         case LOCAL:
             return locale->get(pos.offset);
+        default:
+            return var();
     }
 }
 
@@ -208,6 +215,7 @@ env::variable env::get_arg(std::string name){
         return variable{GLOBAL, global_id};
     }
     lox::error(-1, "Undefined variable '" + name + "'.");
+    return variable{};
 }
 
 
@@ -257,13 +265,14 @@ func env::func_search(std::string name){
         return global->get_func(name);
     }
     lox::error(-1, "Undefined function '" + name + "'.");
+    return func();
 }
 
 
 /**
  * @brief 操作环境中类的函数
 */
-void env::class_define(std::string name, std::map<std::string, stmt> methods_){
+void env::class_define(std::string name, std::map<std::string, stmt_method*> methods){
     if(scope_depth){
         lox::error(-1, "Class can only be defined in global scope.");
         return;

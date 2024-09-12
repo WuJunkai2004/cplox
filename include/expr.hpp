@@ -71,7 +71,7 @@ public:
 class expr_variable : public expr_base{
 private:
     token attr;
-    env::variable pos;
+    env::variable offset;
 public:
     expr_variable(token);
     ~expr_variable();

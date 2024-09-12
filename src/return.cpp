@@ -12,23 +12,23 @@ vm_stack::vm_stack():
 
 
 void vm_stack::into_scope(){
-    return_data res = { token(token_type::NIL, "", "", -1), false };
+    return_data res = { var(), false };
     rets.push_back(res);
     current++;
 }
 
 
-token vm_stack::view_scope(){
+var vm_stack::view_scope(){
     if(current < 0){
         lox::raise_runtime_error(-1, "return statement outside of function");
-        return token(token_type::NIL, "", "", -1);
+        return var();
     }
     return rets[current].value;
 }
 
 
-token vm_stack::exit_scope(){
-    token res = rets[current].value;
+var vm_stack::exit_scope(){
+    var res = rets[current].value;
     rets.pop_back();
     current--;
     return res;
@@ -39,11 +39,11 @@ void vm_stack::set(){
         lox::raise_runtime_error(-1, "return statement outside of function");
         return;
     }
-    rets[current].value = token(token_type::NIL, "", "", -1);
+    rets[current].value = var();
     rets[current].is_set = true;
 }
 
-void vm_stack::set(token t){
+void vm_stack::set(var t){
     if(current < 0){
         lox::raise_runtime_error(-1, "return statement outside of function");
         return;
@@ -52,15 +52,15 @@ void vm_stack::set(token t){
     rets[current].is_set = true;
 }
 
-token vm_stack::top(){
+var vm_stack::top(){
     return view_scope();
 }
 
-token vm_stack::pop(){
+var vm_stack::pop(){
     return exit_scope();
 }
 
-void vm_stack::push(token t){
+void vm_stack::push(var t){
     into_scope();
     set(t);
 }

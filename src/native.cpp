@@ -20,11 +20,10 @@ native::func_clock::func_clock(){
 void native::func_clock::accept(){
     time_type end = std::chrono::system_clock::now();
     dura_type duration = end - start;
-    token res(
+    var res(
         token_type::NUMBER,
-        "",
-        std::to_string(duration.count()),
-        0);
+        std::to_string(duration.count())
+        );
     ret_stack.set(res);
 }
 
@@ -34,7 +33,7 @@ int native::func_clock::build(){
 
 
 void native::func_print::accept(){
-    std::cout<<env::get_arg("content")<<std::endl;
+    std::cout<<env::get("content")<<std::endl;
 }
 
 int native::func_print::build(){
@@ -45,7 +44,7 @@ int native::func_print::build(){
 void native::func_input::accept(){
     std::string content;
     std::cin>>content;
-    ret_stack.set(token(token_type::STRING, "", content, 0));
+    ret_stack.set(var(token_type::STRING, content));
 }
 
 int native::func_input::build(){
@@ -54,15 +53,15 @@ int native::func_input::build(){
 
 
 void native::func_num::accept(){
-    token value = env::get_arg("value");
+    var value = env::get("value");
     double res = 0;
     try{
-        res = std::stod(value.get_literal());
+        res = std::stod(value.get_value());
     } catch(std::invalid_argument){
-        ret_stack.set(token(token_type::NIL, "", "", 0));
+        ret_stack.set();
         return;
     }
-    ret_stack.set(token(token_type::NUMBER, "", std::to_string(res), 0));
+    ret_stack.set(var(token_type::NUMBER, std::to_string(res)));
 }
 
 int native::func_num::build(){
@@ -71,8 +70,8 @@ int native::func_num::build(){
 
 
 void native::func_str::accept(){
-    token value = env::get_arg("value");
-    ret_stack.set(token(token_type::STRING, "", value.get_literal(), 0));
+    var value = env::get("value");
+    ret_stack.set(var(token_type::STRING, value.get_value()));
 }
 
 int native::func_str::build(){
@@ -81,8 +80,8 @@ int native::func_str::build(){
 
 
 void native::func_exit::accept(){
-    token code = env::get_arg("code");
-    exit(static_cast<int>(std::stod(code.get_literal())));
+    var exit_code = env::get("code");
+    exit(static_cast<int>(std::stod(exit_code.get_value())));
 }
 
 int native::func_exit::build(){
@@ -91,15 +90,15 @@ int native::func_exit::build(){
 
 
 void native::func_int::accept(){
-    token value = env::get_arg("value");
+    var value = env::get("value");
     int res = 0;
     try{
-        res = std::stoi(value.get_literal());
+        res = std::stoi(value.get_value());
     } catch(std::invalid_argument){
-        ret_stack.set(token(token_type::NIL, "", "", 0));
+        ret_stack.set();
         return;
     }
-    ret_stack.set(token(token_type::NUMBER, "", std::to_string(res), 0));
+    ret_stack.set(var(token_type::NUMBER, std::to_string(res)));
 }
 
 int native::func_int::build(){
@@ -108,18 +107,18 @@ int native::func_int::build(){
 
 
 void native::func_sleep::accept(){
-    token value = env::get_arg("ms");
-    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(std::stod(value.get_literal()))));
+    var ms = env::get("ms");
+    std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(std::stod(ms.get_value()))));
 }
 
 int native::func_sleep::build(){
-    return 0;
+    return 0; 
 }
 
 
 void native::file_init::accept(){
-    env::define("this.path", env::get_arg("path"));
-    token mode = env::get_arg("mode");
+    env::define("this.path", env::get("path"));
+    var mode = env::get("mode");
     env::define("this.mode", mode);
     env::define("this.__inner_mode__", mode);
 }
@@ -129,22 +128,22 @@ int native::file_init::build(){
 }
 
 void native::file_read::accept(){
-    token self = this_stack.view_scope();
-    std::string name = self.get_lexeme() + ".";
-    token path = env::get_arg(name + "path");
-    token mode = env::get_arg(name + "__inner_mode__");
-    if(mode.get_literal() != "r"){
-        ret_stack.set(token(token_type::NIL, "", "", 0));
+    var self = this_stack.view_scope();
+    std::string name = self.get_value() + ".";
+    var path = env::get(name + "path");
+    var mode = env::get(name + "__inner_mode__");
+    if(mode.get_value() != "r"){
+        ret_stack.set();
         return;
     }
-    std::ifstream file(path.get_literal());
+    std::ifstream file(path.get_value());
     std::string content;
     std::string line;
     while(std::getline(file, line)){
         content += line + "\n";
     }
-    env::assign(name + "__inner_mode__", token(token_type::STRING, "", "eof", 0));
-    ret_stack.set(token(token_type::STRING, "", content, 0));
+    env::assign(name + "__inner_mode__", var(token_type::STRING, "eof"));
+    ret_stack.set(var(token_type::STRING, content));
     file.close();
 }
 
@@ -154,21 +153,21 @@ int native::file_read::build(){
 
 
 void native::file_write::accept(){
-    token self = this_stack.view_scope();
-    std::string name = self.get_lexeme() + ".";
-    token path = env::get_arg(name + "path");
-    token mode = env::get_arg(name + "__inner_mode__");
-    if(mode.get_literal() != "w" && mode.get_literal() != "a"){
+    var self = this_stack.view_scope();
+    std::string name = self.get_value() + ".";
+    var path = env::get(name + "path");
+    var mode = env::get(name + "__inner_mode__");
+    if(mode.get_value() != "w" && mode.get_value() != "a"){
         return;
     }
     std::ios_base::openmode open_mode = std::ios::out;
-    if(mode.get_literal() == "a"){
+    if(mode.get_value() == "a"){
         open_mode = std::ios::app;
     }
-    std::ofstream file(path.get_literal(), open_mode);
-    token content = env::get_arg("content");
-    file<<content.get_literal();
-    env::assign(name + "__inner_mode__", token(token_type::STRING, "", "a", 0));
+    std::ofstream file(path.get_value(), open_mode);
+    var content = env::get("content");
+    file<<content.get_value();
+    env::assign(name + "__inner_mode__", var(token_type::STRING, "a"));
     file.close();
 }
 

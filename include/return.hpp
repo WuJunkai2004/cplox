@@ -10,24 +10,24 @@ class vm_stack{
 private:
     int current;
     struct return_data{
-        token value;
-        bool  is_set;
+        var  value;
+        bool is_set;
     };
     std::vector<return_data> rets;
 public:
     vm_stack();
 
-    void  into_scope();
-    token view_scope();
-    token exit_scope();
-    void  set();
-    void  set(token);
+    void into_scope();
+    var  view_scope();
+    var  exit_scope();
+    void set();
+    void set(var);
 
     bool  has_set();
 
-    token top();
-    token pop();
-    void  push(token);
+    var  top();
+    var  pop();
+    void push(var);
 };
 
 // 解释AST需要的栈

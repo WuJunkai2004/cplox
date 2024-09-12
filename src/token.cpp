@@ -207,3 +207,14 @@ std::string token::get_lexeme(){
 var token::to_var(){
     return var(type, literal);
 }
+
+
+env::variable::variable():
+    scope(env::scope_type::UNKNOWN),
+    offset(-1)
+{}
+
+env::variable::variable(env::scope_type scope_, int offset_):
+    scope(scope_),
+    offset(offset_)
+{}
