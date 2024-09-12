@@ -9,7 +9,6 @@ int main(int argc_len, char* params[]){
     native::import();
     #if 1
     if( argc_len == 1 ){
-        native::import();
         lox::repl_mode();
         return 0;
     }
