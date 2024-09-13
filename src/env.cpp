@@ -64,10 +64,14 @@ environment::environment():
 
 environment::~environment(){}
 
-int environment::exists(std::string name){
-    auto pos = std::find(names.begin() + scope_stack.top(), names.end(), name);
-    if(pos != names.end()){
-        return pos - names.begin();
+int environment::exists(std::string name, bool is_find_all){
+    int scope = scope_stack.top();
+    if(is_find_all){
+        scope = 0;
+    }
+    auto pos = std::find(names.rbegin(), names.rend() - scope, name);
+    if(pos != names.rend() - scope){
+        return names.size() - 1 - (pos - names.rbegin());
     }
     return -1;
 }
@@ -98,7 +102,7 @@ void environment::define_func(std::string name, std::vector<token> params, stmt 
 }
 
 var environment::get(std::string name){
-    int id = exists(name);
+    int id = exists(name, true);
     if(id != -1){
         return values[id];
     }
@@ -142,7 +146,10 @@ void env::pop(){
     if(scope_depth){
         scope_depth--;
     }
+    int del = locale->scope_stack.top();
     locale->scope_stack.pop();
+    locale->names .erase(locale->names.begin() + del, locale->names.end());
+    locale->values.erase(locale->values.begin() + del, locale->values.end());
 }
 
 environment* env::get_current(){
@@ -166,7 +173,7 @@ void env::define(std::string name, var value){
 }
 
 void env::assign(std::string name, var value){
-    int locale_id = locale->exists(name);
+    int locale_id = locale->exists(name, true);
     if(locale_id != -1){
         locale->assign(locale_id, value);
     }
@@ -210,7 +217,7 @@ var env::get(env::variable pos){
 }
 
 env::variable env::get_arg(std::string name){
-    int locale_id = locale->exists(name);
+    int locale_id = locale->exists(name, true);
     if(locale_id != -1){
         return variable{LOCAL, locale_id};
     }
@@ -229,7 +236,7 @@ env::variable env::get_arg(std::string name){
 
 
 bool env::func_exist(std::string name){
-    int locale_id = locale->exists(name);
+    int locale_id = locale->exists(name, true);
     if(locale_id != -1){
         return locale->get_func(name).is_defined();
     }

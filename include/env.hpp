@@ -54,7 +54,7 @@ private:
 public:
     environment();
     ~environment();
-    int  exists(std::string);
+    int  exists(std::string, bool=false);
     int  define(std::string, var);
     int  assign(int,         var);
     void define_func(std::string, std::vector<token>, int);
