@@ -147,7 +147,9 @@ var expr_variable::accept(){
     if(offset.scope == env::scope_type::UNKNOWN){
         offset = env::get_arg(attr.get_lexeme());
     }
-    return env::get(offset);
+    var ret = env::get(offset);
+    ret.pos = offset;
+    return ret;
 }
 
 int expr_variable::build(){
@@ -169,7 +171,7 @@ expr_assign::~expr_assign(){
 var expr_assign::accept(){
     var real_name = code::interpreter::evaluate(this->name);
     var res = code::interpreter::evaluate(value);
-    env::assign(real_name.get_value(), res);
+    env::assign(real_name.pos, res);
     return res;
 }
 

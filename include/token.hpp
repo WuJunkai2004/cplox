@@ -30,6 +30,7 @@ private:
     token_type type;
     std::string value;
 public:
+    env::variable pos;
     var();
     var(token_type, std::string);
     token_type  get_type();

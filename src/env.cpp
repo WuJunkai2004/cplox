@@ -184,6 +184,20 @@ void env::assign(std::string name, var value){
     lox::error(-1, "Undefined variable '" + name + "'.");
 }
 
+
+void env::assign(env::variable pos, var value){
+    switch(pos.scope){
+        case GLOBAL:
+            global->assign(pos.offset, value);
+            break;
+        case LOCAL:
+            locale->assign(pos.offset, value);
+            break;
+        default:
+            break;
+    }
+}
+
 var env::get(token name){
     /** @todo */
     // find the dot

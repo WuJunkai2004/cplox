@@ -13,11 +13,13 @@
 */
 var::var():
     type(token_type::NIL),
+    pos(env::variable()),
     value("")
 {}
 
 var::var(token_type type_, std::string value_):
     type(type_),
+    pos(env::variable()),
     value(value_)
 {}
 

@@ -82,6 +82,7 @@ namespace env{
 
     void define(std::string, var);
     void assign(std::string, var);
+    void assign(variable, var);
 
     var get(std::string);
     var get(variable);
