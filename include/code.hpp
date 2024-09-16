@@ -9,6 +9,7 @@
 #include "token.hpp"
 
 #include <vector>
+#include <string>
 
 namespace code{
     void interpret( std::vector<stmt>);
@@ -19,6 +20,8 @@ namespace code{
     void execute_block(std::vector<stmt>);
 
     token call(func, std::vector<token>);
+
+    std::string translate(std::vector<stmt>);
 };
 
 #endif // __CODE_HPP__

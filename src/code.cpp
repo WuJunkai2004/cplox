@@ -55,3 +55,16 @@ token code::call(func function, std::vector<token> arguments){
     env::pop();
     return ret_stack.exit_scope();
 }
+
+
+std::string code::translate(std::vector<stmt> statements){
+    std::string code;
+    code += "#include \"lox_native.h\"\n";
+    code += "#include \"lox_native.c\"\n";
+    code += "int main(){\n";
+    code += "   lox_init();\n";
+    code += "   int hello = SAVED_STRING(\"Hello, World!\");\n";
+    code += "   _print(hello);\n";
+    code += "   return 0;\n";
+    code += "}\n";
+}
