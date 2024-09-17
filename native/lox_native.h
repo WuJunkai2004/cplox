@@ -68,9 +68,11 @@ string FORMAT(int);
 // *** Native functions
 // ***
 
-int _print(int);
-int _input(int);
-int _clock();
+int __print(int);
+int __input(int);
+int __clock();
+int __sleep(int);
+int __exit(int);
 
 
 #endif

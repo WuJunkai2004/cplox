@@ -1,12 +1,16 @@
-print,	输出
-input,	输入
-clock,	获取从开始运行到当前的时间
-str,		将一个数字转化为字符串
-num,		将一个字符串尽可能转化为数字
-exit,		退出程序
-round,	将数字转为整数
+print,  输出
+input,  输入
+clock,  获取从开始运行到当前的时间
+sleep,  等待一段时间
+str,    将一个数字转化为字符串
+num,    将一个字符串尽可能转化为数字
+exit,   退出程序
+round,  将数字转为整数
 
-file,		文件读写，file_name, mode
-|	read	读入完整文件，仅r模式可用
-|	write	写入内容，仅wa模式可用
-list
+file,       文件读写，file_name, mode
+|   read    读入完整文件，仅r模式可用
+|   write   写入内容，仅wa模式可用
+
+list    (n,(...))  列表定义，可以是多维的
+|   size    返回列表长度
+|   [n]     返回第n个元素(允许编译器开洞)

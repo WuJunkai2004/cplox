@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <time.h>
+#include <unistd.h>
+
 struct MEMORY global;
 struct MEMORY runtime;
 
@@ -209,23 +212,35 @@ string FORMAT(int a){
 
 
 /* NATIVE FUNCTION AND CLASS*/ 
-int _print(int a){
+int __print(int a){
     printf(FORMAT(a));
     printf("\n");
     return 0;
 }
 
 
-int _clock(){
+int __clock(){
     return SAVE_NUMBER((number)clock() / CLOCKS_PER_SEC);
 }
 
 
-int _input(int a){
+int __input(int a){
     char buffer[1024];
     fgets(buffer, 1024, stdin);
     buffer[strlen(buffer) - 1] = '\0';
     return SAVE_STRING(buffer);
+}
+
+
+int __sleep(int a){
+    sleep(AS_NUMBER(a));
+    return 0;
+}
+
+
+int __exit(int a){
+    exit(AS_NUMBER(a));
+    return 0;
 }
 
 
