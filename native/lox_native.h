@@ -1,6 +1,8 @@
 #ifndef _LOX_NATIVE_H_
 #define _LOX_NATIVE_H_
 
+typedef int var;
+
 typedef unsigned char byte;
 typedef double number;
 typedef char*  string;
@@ -14,6 +16,10 @@ struct MEMORY {
 };
 
 void lox_init();
+
+#define NATIVE_NIL   0
+#define NATIVE_FALSE 1
+#define NATIVE_TRUE  2
 
 extern struct MEMORY global;
 extern struct MEMORY runtime;
@@ -55,24 +61,35 @@ int SAVE_FUNC(func);
 
 void raise(string, string);
 
-int adds(int, int);
-int subs(int, int);
-int muls(int, int);
-int divs(int, int);
-int negates(int);
+#define IS_BOOL(a) (GET_TYPE(a) == VAL_TRUE || GET_TYPE(a) == VAL_FALSE)
 
-string FORMAT(int);
+var adds(var, var);
+var subs(var, var);
+var muls(var, var);
+var divs(var, var);
+var negates(var);
+
+var eqs(var, var);  // equal
+var neqs(var, var); // not equal
+var lts(var, var);  // less than
+var les(var, var);  // less or equal
+var gts(var, var);  // greater than
+var ges(var, var);  // greater or equal
+
+var is_true(var);
+
+string FORMAT(var);
 
 
 // ***
 // *** Native functions
 // ***
 
-int __print(int);
-int __input(int);
-int __clock();
-int __sleep(int);
-int __exit(int);
+var __prvar(var);
+var __input(var);
+var __clock();
+var __sleep(var);
+var __exit(var);
 
 
 #endif

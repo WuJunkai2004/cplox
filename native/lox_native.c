@@ -29,7 +29,7 @@ void lox_init(){
     SAVE_CONST_GLOBAL(VAL_TRUE);
 }
 
-int SAVE_CONST_GLOBAL(byte value){
+var SAVE_CONST_GLOBAL(byte value){
     if(global.idx + 1 > global.cap){
         global.data = (byte*)realloc(global.data, global.cap + 1024);
         global.cap += 1024;
@@ -40,7 +40,7 @@ int SAVE_CONST_GLOBAL(byte value){
     return index;
 }
 
-int SAVE_NUMBER_GLOBAL(number value){
+var SAVE_NUMBER_GLOBAL(number value){
     if(global.idx + sizeof(number) + 1 > global.cap){
         global.data = (byte*)realloc(global.data, global.cap + 1024);
         global.cap += 1024;
@@ -52,7 +52,7 @@ int SAVE_NUMBER_GLOBAL(number value){
     return index;
 }
 
-int SAVE_STRING_GLOBAL(string value){
+var SAVE_STRING_GLOBAL(string value){
     int len = strlen(value);
     if(global.idx + len + 2 > global.cap){
         global.data = (byte*)realloc(global.data, global.cap + 1024);
@@ -65,7 +65,7 @@ int SAVE_STRING_GLOBAL(string value){
     return index;
 }
 
-int SAVE_FUNC_GLOBAL(func value){
+var SAVE_FUNC_GLOBAL(func value){
     if(global.idx + sizeof(func) + 1 > global.cap){
         global.data = (byte*)realloc(global.data, global.cap + 1024);
         global.cap += 1024;
@@ -77,7 +77,7 @@ int SAVE_FUNC_GLOBAL(func value){
     return index;
 }
 
-int SAVE_CONST(byte value){
+var SAVE_CONST(byte value){
     if(runtime.idx + 1 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -88,7 +88,7 @@ int SAVE_CONST(byte value){
     return index + RUNTIME_MARK;
 }
 
-int SAVE_NUMBER(number value){
+var SAVE_NUMBER(number value){
     if(runtime.idx + sizeof(number) + 1 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -100,7 +100,7 @@ int SAVE_NUMBER(number value){
     return index + RUNTIME_MARK;
 }
 
-int SAVE_STRING(string value){
+var SAVE_STRING(string value){
     int len = strlen(value);
     if(runtime.idx + len + 2 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
@@ -113,7 +113,7 @@ int SAVE_STRING(string value){
     return index + RUNTIME_MARK;
 }
 
-int SAVE_FUNC(func value){
+var SAVE_FUNC(func value){
     if(runtime.idx + sizeof(func) + 1 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -125,7 +125,7 @@ int SAVE_FUNC(func value){
     return index + RUNTIME_MARK;
 }
 
-int adds(int a, int b){
+var adds(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
         return SAVE_NUMBER(AS_NUMBER(a) + AS_NUMBER(b));
     }
@@ -142,21 +142,21 @@ int adds(int a, int b){
     raise("TypeError", "Unsupported operand types for +");
 }
 
-int subs(int a, int b){
+var subs(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
         return SAVE_NUMBER(AS_NUMBER(a) - AS_NUMBER(b));
     }
     raise("TypeError", "Unsupported operand types for -");
 }
 
-int muls(int a, int b){
+var muls(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
         return SAVE_NUMBER(AS_NUMBER(a) * AS_NUMBER(b));
     }
     raise("TypeError", "Unsupported operand types for *");
 }
 
-int divs(int a, int b){
+var divs(var a, var b){
     if(GET_TYPE(a) != VAL_NUMBER || GET_TYPE(b) != VAL_NUMBER){
         raise("TypeError", "Unsupported operand types for /");
     }
@@ -167,18 +167,90 @@ int divs(int a, int b){
     return SAVE_NUMBER(AS_NUMBER(a) / divisor);
 }
 
-int negates(int a){
+var negates(var a){
     switch(GET_TYPE(a)){
         case VAL_NUMBER:
             return SAVE_NUMBER(-AS_NUMBER(a));
         case VAL_NIL:
         case VAL_FALSE:
-            return 2;
+            return VAL_TRUE;
         case VAL_TRUE:
-            return 1;
+            return VAL_FALSE;
     }
     raise("TypeError", "Unsupported operand type for negate");
 }
+
+var eqs(var a, var b){
+    if(IS_BOOL(a) && IS_BOOL(b)){
+        return a == b ? VAL_TRUE : VAL_FALSE;
+    }
+    if(GET_TYPE(a) != GET_TYPE(b)){
+        raise("TypeError", "Cannot compare different types");
+    }
+    switch(GET_TYPE(a)){
+        case VAL_NUMBER:
+            return AS_NUMBER(a) == AS_NUMBER(b) ? VAL_TRUE : VAL_FALSE;
+        case VAL_STRING:
+            return strcmp(AS_STRING(a), AS_STRING(b)) == 0 ? VAL_TRUE : VAL_FALSE;
+        default:
+            return a == b ? VAL_TRUE : VAL_FALSE;
+    }
+}
+
+var neqs(var a, var b){
+    return eqs(a, b) == VAL_TRUE ? VAL_FALSE : VAL_TRUE;
+}
+
+var lts(var a, var b){
+    if(GET_TYPE(a) != GET_TYPE(b)){
+        raise("TypeError", "Cannot compare different types");
+    }
+    switch(GET_TYPE(a)){
+        case VAL_NUMBER:
+            return AS_NUMBER(a) < AS_NUMBER(b) ? VAL_TRUE : VAL_FALSE;
+        case VAL_STRING:
+            return strcmp(AS_STRING(a), AS_STRING(b)) < 0 ? VAL_TRUE : VAL_FALSE;
+        default:
+            raise("TypeError", "Unsupported operand types for <");
+    }
+}
+
+var gts(var a, var b){
+    if(GET_TYPE(a) != GET_TYPE(b)){
+        raise("TypeError", "Cannot compare different types");
+    }
+    switch(GET_TYPE(a)){
+        case VAL_NUMBER:
+            return AS_NUMBER(a) > AS_NUMBER(b) ? VAL_TRUE : VAL_FALSE;
+        case VAL_STRING:
+            return strcmp(AS_STRING(a), AS_STRING(b)) > 0 ? VAL_TRUE : VAL_FALSE;
+        default:
+            raise("TypeError", "Unsupported operand types for >");
+    }
+}
+
+var les(var a, var b){
+    return gts(a, b) == VAL_TRUE ? VAL_FALSE : VAL_TRUE;
+}
+
+var ges(var a, var b){
+    return lts(a, b) == VAL_TRUE ? VAL_FALSE : VAL_TRUE;
+}
+
+var is_true(var a){
+    switch(GET_TYPE(a)){
+        case VAL_NIL:
+        case VAL_FALSE:
+            return VAL_FALSE;
+        case VAL_NUMBER:
+            return AS_NUMBER(a) == 0 ? VAL_FALSE : VAL_TRUE;
+        case VAL_STRING:
+            return AS_STRING(a)[0] == '\0' ? VAL_FALSE : VAL_TRUE;
+        default:
+            return VAL_TRUE;
+    }
+}
+
 
 void raise(string type, string msg){
     printf("[%s]:\n\t%s\n", type, msg);
@@ -215,7 +287,7 @@ string FORMAT(int a){
 int __print(int a){
     printf(FORMAT(a));
     printf("\n");
-    return 0;
+    return NATIVE_NIL;
 }
 
 
@@ -234,13 +306,13 @@ int __input(int a){
 
 int __sleep(int a){
     sleep(AS_NUMBER(a));
-    return 0;
+    return NATIVE_NIL;
 }
 
 
 int __exit(int a){
     exit(AS_NUMBER(a));
-    return 0;
+    return NATIVE_NIL;
 }
 
 
