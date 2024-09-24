@@ -77,18 +77,10 @@ var SAVE_FUNC_GLOBAL(func value){
     return index;
 }
 
-var SAVE_CONST(byte value){
-    if(runtime.idx + 1 > runtime.cap){
-        runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
-        runtime.cap += 1024;
-    }
-    int index = runtime.idx;
-    *((byte*)(runtime.data + runtime.idx)) = value;
-    runtime.idx += 1;
-    return index + RUNTIME_MARK;
-}
-
 var SAVE_NUMBER(number value){
+    if(runtime.idx + sizeof(number) + 1 > runtime.max){
+        raise("MemoryError", "Out of memory");
+    }
     if(runtime.idx + sizeof(number) + 1 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -102,6 +94,9 @@ var SAVE_NUMBER(number value){
 
 var SAVE_STRING(string value){
     int len = strlen(value);
+    if(runtime.idx + len + 2 > runtime.max){
+        raise("MemoryError", "Out of memory");
+    }
     if(runtime.idx + len + 2 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -114,6 +109,9 @@ var SAVE_STRING(string value){
 }
 
 var SAVE_FUNC(func value){
+    if(runtime.idx + sizeof(func) + 1 > runtime.max){
+        raise("MemoryError", "Out of memory");
+    }
     if(runtime.idx + sizeof(func) + 1 > runtime.cap){
         runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
         runtime.cap += 1024;
@@ -237,23 +235,42 @@ var ges(var a, var b){
     return lts(a, b) == VAL_TRUE ? VAL_FALSE : VAL_TRUE;
 }
 
-var is_true(var a){
+var assign(var origin, var value){
+    int refer_count = (origin & REFER_SECTION) >> 5;
+    if(refer_count){
+        if(refer_count == 1){
+            MASK_AS_GARBAGE(origin);
+        }else{
+            REFER_SUB(origin);
+        }
+    }
+    REFER_ADD(value);
+    return value;
+}
+
+int is_true(var a){
     switch(GET_TYPE(a)){
         case VAL_NIL:
         case VAL_FALSE:
-            return VAL_FALSE;
+            return 0;
         case VAL_NUMBER:
-            return AS_NUMBER(a) == 0 ? VAL_FALSE : VAL_TRUE;
+            return AS_NUMBER(a) == 0 ? 0 : 1;
         case VAL_STRING:
-            return AS_STRING(a)[0] == '\0' ? VAL_FALSE : VAL_TRUE;
+            return AS_STRING(a)[0] == '\0' ? 0 : 1;
         default:
-            return VAL_TRUE;
+            return 1;
     }
 }
 
 
+void garbage_collect(){
+    
+}
+
+
 void raise(string type, string msg){
-    printf("[%s]:\n\t%s\n", type, msg);
+    printf("[%s]:\n", type);
+    printf("  %s\n", msg);
     exit(1);
 }
 

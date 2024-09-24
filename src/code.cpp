@@ -63,8 +63,9 @@ std::string code::translate(std::vector<stmt> statements){
     code += "#include \"lox_native.c\"\n";
     code += "int main(){\n";
     code += "   lox_init();\n";
-    code += "   int hello = SAVED_STRING(\"Hello, World!\");\n";
+    code += "   int hello = SAVE_STRING(\"Hello, World!\");\n";
     code += "   _print(hello);\n";
     code += "   return 0;\n";
     code += "}\n";
+    return code;
 }
