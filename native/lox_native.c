@@ -19,10 +19,10 @@ void lox_init(){
     global.cap = 1024;
     global.max = 0;
 
-    runtime.data = (byte*)malloc(1024);
+    runtime.data = (byte*)malloc(RUNTIME_MEMORY_CAPACITY);
     runtime.idx = 0;
-    runtime.cap = 1024;
-    runtime.max = 1024 * 16;
+    runtime.cap = RUNTIME_MEMORY_CAPACITY;
+    runtime.max = RUNTIME_MEMORY_CAPACITY;
 
     SAVE_CONST_GLOBAL(VAL_NIL);
     SAVE_CONST_GLOBAL(VAL_FALSE);
@@ -78,49 +78,56 @@ var SAVE_FUNC_GLOBAL(func value){
 }
 
 var SAVE_NUMBER(number value){
-    if(runtime.idx + sizeof(number) + 1 > runtime.max){
-        raise("MemoryError", "Out of memory");
-    }
-    if(runtime.idx + sizeof(number) + 1 > runtime.cap){
-        runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
-        runtime.cap += 1024;
-    }
-    int index = runtime.idx;
-    *((byte*)  (runtime.data + runtime.idx)) = VAL_NUMBER;
-    *((number*)(runtime.data + runtime.idx + 1)) = value;
-    runtime.idx += sizeof(number) + 1;
+    int index = allocate(sizeof(number) + 1);
+    *((byte*)  (runtime.data + index)) = VAL_NUMBER;
+    *((number*)(runtime.data + index + 1)) = value;
     return index + RUNTIME_MARK;
 }
 
 var SAVE_STRING(string value){
     int len = strlen(value);
-    if(runtime.idx + len + 2 > runtime.max){
-        raise("MemoryError", "Out of memory");
-    }
-    if(runtime.idx + len + 2 > runtime.cap){
-        runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
-        runtime.cap += 1024;
-    }
-    int index = runtime.idx;
-    *((byte*)(runtime.data + runtime.idx)) = VAL_STRING;
-    memcpy(runtime.data + runtime.idx + 1, value, len + 1);
-    runtime.idx += len + 2;
+    int index = allocate(len + 2);
+    *((byte*)(runtime.data + index)) = VAL_STRING;
+    memcpy(runtime.data + index + 1, value, len + 1);
     return index + RUNTIME_MARK;
 }
 
 var SAVE_FUNC(func value){
-    if(runtime.idx + sizeof(func) + 1 > runtime.max){
-        raise("MemoryError", "Out of memory");
-    }
-    if(runtime.idx + sizeof(func) + 1 > runtime.cap){
-        runtime.data = (byte*)realloc(runtime.data, runtime.cap + 1024);
-        runtime.cap += 1024;
-    }
-    int index = runtime.idx;
-    *((byte*)(runtime.data + runtime.idx)) = VAL_FUNC;
-    *((func*)(runtime.data + runtime.idx + 1)) = value;
-    runtime.idx += sizeof(func) + 1;
+    int index = allocate(sizeof(func) + 1);
+    *((byte*)(runtime.data + index)) = VAL_FUNC;
+    *((func*)(runtime.data + index + 1)) = value;
     return index + RUNTIME_MARK;
+}
+
+int allocate(int size){
+    if(runtime.idx + size > runtime.max){
+        garbage_collect();
+    }
+    int meet_data = -1;
+    for(int idx=runtime.idx; idx<runtime.idx+size; idx++){
+        if(*(char*)(runtime.data + idx)){
+            meet_data = idx;
+            break;
+        }
+    }
+    if(meet_data == -1){
+        int index = runtime.idx;
+        runtime.idx += size;
+        return index;
+    }
+    int type = GET_TYPE_PTR(runtime.data + meet_data);
+    switch(type){
+        case VAL_NUMBER:
+            runtime.idx += sizeof(number) + 1;
+            break;
+        case VAL_STRING:
+            runtime.idx += strlen(AS_STRING_PTR(runtime.data + index)) + 2;
+            break;
+        case VAL_FUNC:
+            runtime.idx += sizeof(func) + 1;
+            break;
+    }
+    return allocate(size);
 }
 
 var adds(var a, var b){
@@ -264,7 +271,30 @@ int is_true(var a){
 
 
 void garbage_collect(){
-    
+    printf("in gc\n");
+    int   end = runtime.idx;
+    runtime.idx  = 0;
+    for(int cur=0; cur<end;){
+        byte type = GET_TYPE_PTR(runtime.data + cur);
+        int is_garbage = IS_GARBAGE_PTR(runtime.data + cur);
+        int size = 0;
+        switch(type){
+            case VAL_STRING:
+                size = strlen(AS_STRING_PTR(runtime.data + cur)) + 2;
+                break;
+            case VAL_FUNC:
+                size = sizeof(func) + 1;
+                break;
+            default:
+                size = sizeof(number) + 1;
+        }
+        if(is_garbage){
+            for(int i=cur; i<cur+size; i++){
+                *(runtime.data + i) = (byte)0;
+            }
+        }
+        cur += size;
+    }
 }
 
 

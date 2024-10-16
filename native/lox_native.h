@@ -7,7 +7,11 @@ typedef unsigned char byte;
 
 typedef double number;
 typedef char*  string;
-typedef int    func;
+typedef void*  func;
+
+#ifndef RUNTIME_MEMORY_CAPACITY
+#define RUNTIME_MEMORY_CAPACITY 1024 * 8 * 8
+#endif
 
 struct MEMORY {
     byte* data;
@@ -65,9 +69,13 @@ int SAVE_FUNC(func);
 
 #define MASK_AS_GARBAGE(i) (*((byte*)LOCALIZE(i)) |= GARBAGE_SECTION)
 
+#define IS_GARBAGE_PTR(ptr) (*((byte*)ptr) & GARBAGE_SECTION)
+#define IS_GARBAGE(i) IS_GARBAGE_PTR(LOCALIZE(i))
+
 #define REFER_ADD(i) (*((byte*)LOCALIZE(i)) += 0b00100000)
 #define REFER_SUB(i) (*((byte*)LOCALIZE(i)) -= 0b00100000)
 
+int  allocate(int);
 void garbage_collect();
 
 void raise(string, string);
