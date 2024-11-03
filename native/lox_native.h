@@ -10,7 +10,8 @@ typedef char*  string;
 typedef void*  func;
 
 #ifndef RUNTIME_MEMORY_CAPACITY
-#define RUNTIME_MEMORY_CAPACITY 1024 * 8 * 8
+//#define RUNTIME_MEMORY_CAPACITY 1024 * 8 * 8
+#define RUNTIME_MEMORY_CAPACITY 64
 #endif
 
 struct MEMORY {
@@ -28,6 +29,7 @@ void lox_init();
 
 extern struct MEMORY global;
 extern struct MEMORY runtime;
+extern struct MEMORY ret_val;
 
 enum VAL_TYPE{
     VAL_NIL      = 0b00000010,
@@ -38,6 +40,14 @@ enum VAL_TYPE{
     VAL_FUNC     = 0b00001100,
     VAL_CLASS    = 0b00010000,
     VAL_METHOD   = 0b00010010,
+    VAL_PTR      = 0b00011110,
+};
+
+enum RET_POS{
+    RET_DIV = 0,
+    RET_MUL = 9,
+    RET_SUB = 18,
+    RET_ADD = 27,
 };
 
 int SAVE_CONST_GLOBAL(byte);
@@ -53,8 +63,12 @@ int SAVE_FUNC(func);
 #define TYPE_SECTION    0b00011110
 #define REFER_SECTION   0b11100000
 
-#define RUNTIME_MARK 0b10000000000000000
-#define LOCALIZE(i) ({int _i=i;_i & RUNTIME_MARK ? runtime.data + (_i & ~RUNTIME_MARK) : global.data + _i;})
+#define RUNTIME_MARK 0b010000000000000000
+#define RETURN_MARK  0b100000000000000000
+#define LOCALIZE(i) ({int _i=i;\
+    _i & RUNTIME_MARK ? runtime.data + (_i & ~RUNTIME_MARK) : \
+    _i & RETURN_MARK  ? ret_val.data + (_i & ~RETURN_MARK)  : \
+    global.data + _i;})
 
 #define GET_TYPE_PTR(ptr) (*((byte*)ptr) & TYPE_SECTION)
 #define GET_TYPE(i) GET_TYPE_PTR(LOCALIZE(i))
@@ -78,7 +92,7 @@ int SAVE_FUNC(func);
 int  allocate(int);
 void garbage_collect();
 
-void raise(string, string);
+var raise(string, string);
 
 #define IS_BOOL(a) (GET_TYPE(a) == VAL_TRUE || GET_TYPE(a) == VAL_FALSE)
 
@@ -95,6 +109,7 @@ var les(var, var);  // less or equal
 var gts(var, var);  // greater than
 var ges(var, var);  // greater or equal
 
+var define(var);
 var assign(var, var);
 
 int is_true(var);

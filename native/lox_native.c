@@ -12,6 +12,7 @@
 
 struct MEMORY global;
 struct MEMORY runtime;
+struct MEMORY ret_val;
 
 void lox_init(){
     global.data = (byte*)malloc(1024);
@@ -23,6 +24,12 @@ void lox_init(){
     runtime.idx = 0;
     runtime.cap = RUNTIME_MEMORY_CAPACITY;
     runtime.max = RUNTIME_MEMORY_CAPACITY;
+    memset(runtime.data, 0, RUNTIME_MEMORY_CAPACITY);
+
+    ret_val.data = (byte*)malloc(1024 * 8);
+    global.idx = 0;
+    global.cap = 1024 * 8;
+    global.max = 1024 * 8;
 
     SAVE_CONST_GLOBAL(VAL_NIL);
     SAVE_CONST_GLOBAL(VAL_FALSE);
@@ -121,7 +128,7 @@ int allocate(int size){
             runtime.idx += sizeof(number) + 1;
             break;
         case VAL_STRING:
-            runtime.idx += strlen(AS_STRING_PTR(runtime.data + index)) + 2;
+            runtime.idx += strlen(AS_STRING_PTR(runtime.data + runtime.idx)) + 2;
             break;
         case VAL_FUNC:
             runtime.idx += sizeof(func) + 1;
@@ -132,7 +139,8 @@ int allocate(int size){
 
 var adds(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
-        return SAVE_NUMBER(AS_NUMBER(a) + AS_NUMBER(b));
+        *(number*)(ret_val.data + RET_ADD + 1) = AS_NUMBER(a) + AS_NUMBER(b);
+        return RET_ADD + RETURN_MARK;
     }
     if(GET_TYPE(a) == VAL_STRING && GET_TYPE(b) == VAL_STRING){
         int len_a = strlen(AS_STRING(a));
@@ -144,32 +152,36 @@ var adds(var a, var b){
         free(new_str);
         return ret;
     }
-    raise("TypeError", "Unsupported operand types for +");
+    return raise("TypeError", "Unsupported operand types for +");
 }
 
 var subs(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
-        return SAVE_NUMBER(AS_NUMBER(a) - AS_NUMBER(b));
+        *(number*)(ret_val.data + RET_SUB + 1) = AS_NUMBER(a) - AS_NUMBER(b);
+        return RET_SUB + RETURN_MARK;
     }
-    raise("TypeError", "Unsupported operand types for -");
+    return raise("TypeError", "Unsupported operand types for -");
 }
 
 var muls(var a, var b){
     if(GET_TYPE(a) == VAL_NUMBER && GET_TYPE(b) == VAL_NUMBER){
-        return SAVE_NUMBER(AS_NUMBER(a) * AS_NUMBER(b));
+        *(number*)(ret_val.data + RET_MUL + 1) = AS_NUMBER(a) * AS_NUMBER(b);
+        return RET_MUL + RETURN_MARK;
     }
-    raise("TypeError", "Unsupported operand types for *");
+    return raise("TypeError", "Unsupported operand types for *");
 }
 
 var divs(var a, var b){
     if(GET_TYPE(a) != VAL_NUMBER || GET_TYPE(b) != VAL_NUMBER){
-        raise("TypeError", "Unsupported operand types for /");
+        return raise("TypeError", "Unsupported operand types for /");
     }
     number divisor = AS_NUMBER(b);
     if(divisor == 0){
-        raise("ZeroDivisionError", "division by zero");
+        return raise("ZeroDivisionError", "division by zero");
     }
-    return SAVE_NUMBER(AS_NUMBER(a) / divisor);
+    *(byte*)  (ret_val.data + RET_DIV) = VAL_NUMBER;
+    *(number*)(ret_val.data + RET_DIV + 1) = AS_NUMBER(a) / divisor;
+    return RET_DIV + RETURN_MARK;
 }
 
 var negates(var a){
@@ -182,7 +194,7 @@ var negates(var a){
         case VAL_TRUE:
             return VAL_FALSE;
     }
-    raise("TypeError", "Unsupported operand type for negate");
+    return raise("TypeError", "Unsupported operand type for negate");
 }
 
 var eqs(var a, var b){
@@ -190,7 +202,7 @@ var eqs(var a, var b){
         return a == b ? VAL_TRUE : VAL_FALSE;
     }
     if(GET_TYPE(a) != GET_TYPE(b)){
-        raise("TypeError", "Cannot compare different types");
+        return raise("TypeError", "Cannot compare different types");
     }
     switch(GET_TYPE(a)){
         case VAL_NUMBER:
@@ -208,7 +220,7 @@ var neqs(var a, var b){
 
 var lts(var a, var b){
     if(GET_TYPE(a) != GET_TYPE(b)){
-        raise("TypeError", "Cannot compare different types");
+        return raise("TypeError", "Cannot compare different types");
     }
     switch(GET_TYPE(a)){
         case VAL_NUMBER:
@@ -216,13 +228,13 @@ var lts(var a, var b){
         case VAL_STRING:
             return strcmp(AS_STRING(a), AS_STRING(b)) < 0 ? VAL_TRUE : VAL_FALSE;
         default:
-            raise("TypeError", "Unsupported operand types for <");
+            return raise("TypeError", "Unsupported operand types for <");
     }
 }
 
 var gts(var a, var b){
     if(GET_TYPE(a) != GET_TYPE(b)){
-        raise("TypeError", "Cannot compare different types");
+        return raise("TypeError", "Cannot compare different types");
     }
     switch(GET_TYPE(a)){
         case VAL_NUMBER:
@@ -230,7 +242,7 @@ var gts(var a, var b){
         case VAL_STRING:
             return strcmp(AS_STRING(a), AS_STRING(b)) > 0 ? VAL_TRUE : VAL_FALSE;
         default:
-            raise("TypeError", "Unsupported operand types for >");
+            return raise("TypeError", "Unsupported operand types for >");
     }
 }
 
@@ -242,14 +254,20 @@ var ges(var a, var b){
     return lts(a, b) == VAL_TRUE ? VAL_FALSE : VAL_TRUE;
 }
 
+var define(var value){
+    REFER_ADD(value);
+    return value;
+}
+
 var assign(var origin, var value){
-    int refer_count = (origin & REFER_SECTION) >> 5;
+    int refer_count = (*(byte*)LOCALIZE(origin) & REFER_SECTION) >> 5;
     if(refer_count){
         if(refer_count == 1){
             MASK_AS_GARBAGE(origin);
-        }else{
-            REFER_SUB(origin);
         }
+        REFER_SUB(origin);
+    } else {
+        MASK_AS_GARBAGE(origin);
     }
     REFER_ADD(value);
     return value;
@@ -272,7 +290,8 @@ int is_true(var a){
 
 void garbage_collect(){
     printf("in gc\n");
-    int   end = runtime.idx;
+    int gced = 0;
+    int end = runtime.idx;
     runtime.idx  = 0;
     for(int cur=0; cur<end;){
         byte type = GET_TYPE_PTR(runtime.data + cur);
@@ -292,16 +311,21 @@ void garbage_collect(){
             for(int i=cur; i<cur+size; i++){
                 *(runtime.data + i) = (byte)0;
             }
+            gced = 1;
         }
         cur += size;
+    }
+    if(gced == 0){
+        raise("MemoryError", "Runtime memory is full");
     }
 }
 
 
-void raise(string type, string msg){
+var raise(string type, string msg){
     printf("[%s]:\n", type);
     printf("  %s\n", msg);
     exit(1);
+    return VAL_NIL;
 }
 
 
@@ -345,7 +369,9 @@ int __clock(){
 
 int __input(int a){
     char buffer[1024];
-    fgets(buffer, 1024, stdin);
+    //fgets(buffer, 1024, stdin);
+    scanf("%s", buffer);
+    return VAL_NIL;
     buffer[strlen(buffer) - 1] = '\0';
     return SAVE_STRING(buffer);
 }
